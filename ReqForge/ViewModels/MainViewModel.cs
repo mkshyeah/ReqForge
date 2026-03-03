@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using MaterialDesignThemes.Wpf;
 using ReqForge.Models;
 using ReqForge.Services;
 
@@ -30,6 +31,7 @@ namespace ReqForge.ViewModels
         [ObservableProperty] private RequestCollection? _selectedCollection;
         [ObservableProperty] private RequestEnvironment? _selectedEnvironment;
         [ObservableProperty] private ObservableCollection<RequestEnvironment> _environments = new();
+        [ObservableProperty] private bool _isDarkTheme = false;
 
         public List<string> Methods { get; } = new() { "GET", "POST", "PUT", "PATCH", "DELETE" };
         public ObservableCollection<HeaderItem> Headers { get; } = new();
@@ -171,6 +173,8 @@ namespace ReqForge.ViewModels
             foreach (var h in request.Headers)
                 Headers.Add(new HeaderItem(h.Key, h.Value));
             
+            if (Headers.Count == 0)
+                Headers.Add(new HeaderItem("", ""));
         }
 
         [RelayCommand]
@@ -218,6 +222,7 @@ namespace ReqForge.ViewModels
             var newEnv = new RequestEnvironment { Name = $"Env {Environments.Count + 1}" };
             newEnv.Variables.Add(new EnvironmentVariable("base_url", "https://api.example.com"));
             Environments.Add(newEnv);
+            SelectedEnvironment = newEnv;
             SaveEnvironments();
         }
         
@@ -258,6 +263,25 @@ namespace ReqForge.ViewModels
             WriteIndented = true,
             Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
         };
+        
+        [RelayCommand]
+        private void DeleteEnvironment(RequestEnvironment env)
+        {
+            if (env == null) return;
+            Environments.Remove(env);
+            if (SelectedEnvironment == env) SelectedEnvironment = null;
+            SaveEnvironments();
+        }
+
+        [RelayCommand]
+        private void ToggleTheme()
+        {
+            IsDarkTheme = !IsDarkTheme;
+            var helper = new PaletteHelper();
+            var theme = helper.GetTheme();
+            theme.SetBaseTheme(IsDarkTheme ? BaseTheme.Dark : BaseTheme.Light);
+            helper.SetTheme(theme);
+        }
         
         private string ResolveVariables(string input)
         {
