@@ -22,6 +22,8 @@
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
         <helpers:BindingProxy x:Key="Proxy" Data="{Binding}"/>
         <helpers:MethodToColorConverter x:Key="MethodToColorConverter"/>
+        <helpers:NullToBoolConverter x:Key="SelectedToEnabledConverter"/>
+        <helpers:StatusCodeToBrushConverter x:Key="StatusCodeToBrushConverter"/>
     </Window.Resources>
     
     <Grid>
@@ -118,6 +120,23 @@
                         Width="80" Margin="5,0,0,0" 
                         DockPanel.Dock="Right" />
                 
+                <ComboBox ItemsSource="{Binding Environments}"
+                          SelectedItem="{Binding SelectedEnvironment}"
+                          DisplayMemberPath="Name"
+                          Width="150"
+                          DockPanel.Dock="Right"
+                          Margin="5,0"
+                          materialDesign:HintAssist.Hint="No Environment"
+                          materialDesign:TextFieldAssist.HasClearButton="True"/>
+                
+                <Button DockPanel.Dock="Right"
+                        Command="{Binding ToggleThemeCommand}"
+                        Style="{StaticResource MaterialDesignIconButton}"
+                        ToolTip="Toggle theme"
+                        Margin="5,0">
+                    <materialDesign:PackIcon Kind="ThemeLightDark"/>
+                </Button>
+                
                 <TextBox Text="{Binding Url, UpdateSourceTrigger=PropertyChanged}"
                          Margin="5,0"
                          VerticalAlignment="Center"
@@ -189,17 +208,71 @@
                              Padding="5"/>
                 </TabItem>
                 
+                <TabItem Header="Environments">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,5">
+                            <Button Content="New Environment" 
+                                    Command="{Binding CreateEnvironmentCommand}"
+                                    Style="{StaticResource MaterialDesignFlatButton}"
+                                    FontSize="12"/>
+                            <Button Content="Delete Current Env" 
+                                    Command="{Binding DeleteEnvironmentCommand}"
+                                    CommandParameter="{Binding SelectedEnvironment}"
+                                    Foreground="Red"
+                                    Style="{StaticResource MaterialDesignFlatButton}"
+                                    FontSize="12"
+                                    Margin="10,0,0,0"/>
+                        </StackPanel>
+
+                        <DataGrid Grid.Row="1" 
+                                  ItemsSource="{Binding SelectedEnvironment.Variables}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  HeadersVisibility="Column"
+                                  Margin="0,5">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Variable (Key)" Binding="{Binding Key}" Width="*"/>
+                                <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="2*"/>
+                                <DataGridTemplateColumn Width="50">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Content="✕"
+                                                    Command="{Binding DataContext.RemoveVariableCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource MaterialDesignFlatButton}"
+                                                    Foreground="Gray" FontSize="12"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <Button Grid.Row="2" 
+                                Content="+ Add Variable"
+                                Command="{Binding AddVariableCommand}"
+                                HorizontalAlignment="Left"
+                                Margin="0,5,0,0"
+                                IsEnabled="{Binding SelectedEnvironment, Converter={StaticResource SelectedToEnabledConverter}}"/> 
+                                </Grid>
+                </TabItem>
+                
             </TabControl>
             
             <!-- Строка 3: Статус ответа-->
             <Border Grid.Row="3" 
-                    Background="{DynamicResource MaterialDesign.Brush.Primary.Light}" 
+                    Background="{Binding StatusInfo, Converter={StaticResource StatusCodeToBrushConverter}}" 
                     Margin="10,8,10,4" 
                     CornerRadius="4">
                 <TextBlock Text="{Binding StatusInfo}"
                            FontWeight="Bold"
                            Padding="12,6"
-                           Foreground="{DynamicResource MaterialDesign.Brush.Primary.Foreground}"/>
+                           Foreground="White"/>
             </Border>
             
             <!-- Строка 4: Вкладки ответа -->
