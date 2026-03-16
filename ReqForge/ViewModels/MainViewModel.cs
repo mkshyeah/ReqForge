@@ -4,7 +4,9 @@ using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ReqForge.Models;
+using ReqForge.Models.DTOs;
 using ReqForge.Services;
+using ReqForge.Services.Interfaces;
 
 namespace ReqForge.ViewModels
 {

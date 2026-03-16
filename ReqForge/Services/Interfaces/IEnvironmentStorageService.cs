@@ -1,6 +1,6 @@
-﻿using ReqForge.Models;
+﻿using ReqForge.Models.DTOs;
 
-namespace ReqForge.Services;
+namespace ReqForge.Services.Interfaces;
 
 public interface IEnvironmentStorageService
 {

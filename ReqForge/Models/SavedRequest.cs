@@ -1,4 +1,6 @@
-﻿namespace ReqForge.Models;
+﻿using ReqForge.Models.DTOs;
+
+namespace ReqForge.Models;
 
 public class SavedRequest
 {

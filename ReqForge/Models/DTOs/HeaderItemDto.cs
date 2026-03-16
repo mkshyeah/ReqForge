@@ -1,4 +1,4 @@
-﻿namespace ReqForge.Models;
+﻿namespace ReqForge.Models.DTOs;
 
 public class HeaderItemDto
 {

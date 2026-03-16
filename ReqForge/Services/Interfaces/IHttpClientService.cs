@@ -1,6 +1,6 @@
 ﻿using ReqForge.Models;
 
-namespace ReqForge.Services;
+namespace ReqForge.Services.Interfaces;
 
 public interface IHttpClientService
 {

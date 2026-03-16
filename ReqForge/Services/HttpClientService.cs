@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Http;
 using ReqForge.Models;
+using ReqForge.Services.Interfaces;
 
 namespace ReqForge.Services;
 
