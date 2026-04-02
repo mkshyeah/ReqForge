@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using ReqForge.Models;
+using ReqForge.Models.DTOs;
 
 namespace ReqForge.ViewModels;
 

@@ -17,9 +17,10 @@ public partial class MainWindow : Window
         var service = new HttpClientService();
         var collectionStorage = new CollectionStorageService();
         var envStorage = new EnvironmentStorageService();
+        var authService = new AuthService();
         // Устанавливаем DataContext. Теперь {Binding} знает, где искать свойства.
 
-        DataContext = new MainViewModel(service, collectionStorage, envStorage);
+        DataContext = new MainViewModel(service, collectionStorage, envStorage,authService );
     }
     
     private void TreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)

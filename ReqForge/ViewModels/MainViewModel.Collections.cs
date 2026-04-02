@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using ReqForge.Models;
+using ReqForge.Models.DTOs;
 
 namespace ReqForge.ViewModels;
 
@@ -10,7 +11,7 @@ public partial class MainViewModel
     {
         var newColl = new RequestCollection { Name = $"Collection {Collections.Count + 1}" };
         Collections.Add(newColl);
-        _storage.SaveAll(Collections.ToList());
+        _storage.SaveAll(Collections.ToList(), CurrentUsername);
     }
 
     [RelayCommand]
@@ -43,7 +44,7 @@ public partial class MainViewModel
         };
         
         SelectedCollection.Requests.Add(requestDto);
-        _storage.SaveAll(Collections.ToList());
+        _storage.SaveAll(Collections.ToList(), CurrentUsername);
     }
 
     [RelayCommand]
@@ -73,7 +74,7 @@ public partial class MainViewModel
         if (collection != null)
         {
             collection.Requests.Remove(request);
-            _storage.SaveAll(Collections.ToList());
+            _storage.SaveAll(Collections.ToList(),CurrentUsername);
         }
 
         if (Headers.Count == 0)
