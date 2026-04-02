@@ -12,6 +12,8 @@ public partial class MainViewModel
         var newColl = new RequestCollection { Name = $"Collection {Collections.Count + 1}" };
         Collections.Add(newColl);
         _storage.SaveAll(Collections.ToList(), CurrentUsername);
+
+        ApplyFilter();
     }
 
     [RelayCommand]
@@ -40,11 +42,19 @@ public partial class MainViewModel
             Headers = Headers
                 .Where(h => !string.IsNullOrWhiteSpace(h.Key))
                 .Select(h => new HeaderItemDto { Key = h.Key, Value = h.Value })
-                .ToList()
+                .ToList(),
+            AuthType = SelectedAuthType,
+            BearerToken = BearerToken,
+            BasicAuthUsername = BasicAuthUsername,
+            BasicAuthPassword = BasicAuthPassword,
+            ApiKeyName = ApiKeyName,
+            ApiKeyValue = ApiKeyValue
         };
         
         SelectedCollection.Requests.Add(requestDto);
         _storage.SaveAll(Collections.ToList(), CurrentUsername);
+        
+        ApplyFilter();
     }
 
     [RelayCommand]
@@ -63,6 +73,13 @@ public partial class MainViewModel
 
         if (Headers.Count == 0)
             Headers.Add(new HeaderItem("", ""));
+        
+        SelectedAuthType = request.AuthType;
+        BearerToken = request.BearerToken;
+        BasicAuthUsername = request.BasicAuthUsername;
+        BasicAuthPassword = request.BasicAuthPassword;
+        ApiKeyName = request.ApiKeyName;
+        ApiKeyValue = request.ApiKeyValue;
     }
 
     [RelayCommand]
@@ -81,5 +98,7 @@ public partial class MainViewModel
         {
             Headers.Add(new HeaderItem("", ""));
         }
+        
+        ApplyFilter();
     }
 }

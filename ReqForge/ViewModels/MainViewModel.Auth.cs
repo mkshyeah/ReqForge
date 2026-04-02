@@ -78,6 +78,7 @@ public partial class MainViewModel
         {
             Collections = new ObservableCollection<RequestCollection>(
                 _storage.LoadAll(CurrentUsername));
+            ApplyFilter();
         }
         else
         {

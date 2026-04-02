@@ -26,6 +26,7 @@
         <helpers:StatusCodeToBrushConverter x:Key="StatusCodeToBrushConverter"/>
         <helpers:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter"/>
         <helpers:StringMatchToVisibilityConverter x:Key="StringMatchToVisibilityConverter"/>
+        <helpers:BoolToTestResultBrushConverter x:Key="BoolToTestResultBrushConverter"/>
     </Window.Resources>
     
     <Grid>
@@ -49,11 +50,26 @@
                         Command="{Binding SaveRequestCommand}"
                         Style="{StaticResource MaterialDesignOutlinedButton}"
                         ToolTip="Save current request to selected collection"/>
+                <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                    <Button Content="EXPORT"
+                            Command="{Binding ExportCollectionsCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            Width="125"
+                            Margin="0,0,5,0"/>
+                    <Button Content="IMPORT"
+                            Command="{Binding ImportCollectionsCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            Width="125"/>
+                </StackPanel>
+                
+                <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                         materialDesign:HintAssist.Hint="Search requests..."
+                         materialDesign:TextFieldAssist.HasClearButton="True"
+                         Margin="10,5,10,0"/>
             </StackPanel>
-            
 
             <TreeView Grid.Row="1" 
-                      ItemsSource="{Binding Collections}"
+                      ItemsSource="{Binding FilteredCollections}"
                       SelectedItemChanged="TreeView_SelectedItemChanged"
                       BorderThickness="0,1,0,0"
                       BorderBrush="#E0E0E0">
@@ -416,6 +432,177 @@
                                 </Grid>
                 </TabItem>
                 
+                <TabItem Header="Auth">
+    <StackPanel Margin="8">
+        <ComboBox ItemsSource="{Binding AuthTypes}"
+                  SelectedItem="{Binding SelectedAuthType}"
+                  Width="200"
+                  HorizontalAlignment="Left"
+                  Margin="0,5,0,10"
+                  materialDesign:HintAssist.Hint="Auth Type"/>
+
+        <!-- Bearer Token -->
+        <StackPanel Visibility="{Binding SelectedAuthType,
+                    Converter={StaticResource StringMatchToVisibilityConverter},
+                    ConverterParameter=Bearer Token}">
+            <TextBlock Text="Token" FontWeight="SemiBold" Margin="0,0,0,4"/>
+            <TextBox Text="{Binding BearerToken, UpdateSourceTrigger=PropertyChanged}"
+                     materialDesign:HintAssist.Hint="Enter bearer token"
+                     Margin="0,0,0,8"/>
+        </StackPanel>
+
+        <!-- Basic Auth -->
+        <StackPanel Visibility="{Binding SelectedAuthType,
+                    Converter={StaticResource StringMatchToVisibilityConverter},
+                    ConverterParameter=Basic Auth}">
+            <TextBlock Text="Username" FontWeight="SemiBold" Margin="0,0,0,4"/>
+            <TextBox Text="{Binding BasicAuthUsername, UpdateSourceTrigger=PropertyChanged}"
+                     materialDesign:HintAssist.Hint="Username"
+                     Margin="0,0,0,8"/>
+            <TextBlock Text="Password" FontWeight="SemiBold" Margin="0,0,0,4"/>
+            <TextBox Text="{Binding BasicAuthPassword, UpdateSourceTrigger=PropertyChanged}"
+                     materialDesign:HintAssist.Hint="Password"
+                     Margin="0,0,0,8"/>
+        </StackPanel>
+
+        <!-- API Key -->
+        <StackPanel Visibility="{Binding SelectedAuthType,
+                    Converter={StaticResource StringMatchToVisibilityConverter},
+                    ConverterParameter=API Key}">
+            <TextBlock Text="Key Name" FontWeight="SemiBold" Margin="0,0,0,4"/>
+            <TextBox Text="{Binding ApiKeyName, UpdateSourceTrigger=PropertyChanged}"
+                     materialDesign:HintAssist.Hint="Header name (e.g. X-API-Key)"
+                     Margin="0,0,0,8"/>
+            <TextBlock Text="Key Value" FontWeight="SemiBold" Margin="0,0,0,4"/>
+            <TextBox Text="{Binding ApiKeyValue, UpdateSourceTrigger=PropertyChanged}"
+                     materialDesign:HintAssist.Hint="API key value"
+                     Margin="0,0,0,8"/>
+        </StackPanel>
+
+        <!-- None -->
+        <TextBlock Text="No authorization"
+                   Foreground="Gray"
+                   Margin="0,10,0,0"
+                   Visibility="{Binding SelectedAuthType,
+                   Converter={StaticResource StringMatchToVisibilityConverter},
+                   ConverterParameter=None}"/>
+    </StackPanel>
+</TabItem>
+                
+                <TabItem Header="Tests">
+    <DockPanel>
+        <Button Content="+ Add Test"
+                Command="{Binding AddTestCommand}"
+                DockPanel.Dock="Bottom"
+                HorizontalAlignment="Left"
+                Margin="0,5,0,0"/>
+        <DataGrid ItemsSource="{Binding Tests}"
+                  AutoGenerateColumns="False"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  HeadersVisibility="Column">
+            <DataGrid.Columns>
+                <DataGridComboBoxColumn Header="Type"
+                                        SelectedItemBinding="{Binding TestType}"
+                                        Width="*">
+                    <DataGridComboBoxColumn.ElementStyle>
+                        <Style TargetType="ComboBox">
+                            <Setter Property="ItemsSource" Value="{Binding DataContext.TestTypes, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                        </Style>
+                    </DataGridComboBoxColumn.ElementStyle>
+                    <DataGridComboBoxColumn.EditingElementStyle>
+                        <Style TargetType="ComboBox">
+                            <Setter Property="ItemsSource" Value="{Binding DataContext.TestTypes, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                        </Style>
+                    </DataGridComboBoxColumn.EditingElementStyle>
+                </DataGridComboBoxColumn>
+                <DataGridTextColumn Header="Expected Value"
+                                    Binding="{Binding ExpectedValue}"
+                                    Width="*"/>
+                <DataGridTemplateColumn Header="" Width="50">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Content="✕"
+                                    Command="{Binding DataContext.RemoveTestCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                    CommandParameter="{Binding}"
+                                    Padding="4,2"
+                                    MinWidth="0" MinHeight="0"
+                                    Style="{StaticResource MaterialDesignFlatButton}"
+                                    Foreground="Gray"
+                                    FontSize="12"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </DockPanel>
+</TabItem>
+                
+                <TabItem Header="WebSocket">
+    <Grid Margin="8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- URL + Connect/Disconnect -->
+        <DockPanel Grid.Row="0" Margin="0,0,0,8">
+            <Button Content="Disconnect"
+                    Command="{Binding WsDisconnectCommand}"
+                    DockPanel.Dock="Right"
+                    Margin="5,0,0,0"
+                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                    Padding="12,4"/>
+            <Button Content="Connect"
+                    Command="{Binding WsConnectCommand}"
+                    DockPanel.Dock="Right"
+                    Margin="5,0,0,0"
+                    Style="{StaticResource MaterialDesignFlatMidBgButton}"
+                    Padding="12,4"/>
+            <TextBox Text="{Binding WsUrl, UpdateSourceTrigger=PropertyChanged}"
+                     materialDesign:HintAssist.Hint="ws://echo.websocket.org"
+                     VerticalAlignment="Center"/>
+        </DockPanel>
+
+        <!-- Status -->
+        <TextBlock Grid.Row="1" Margin="0,0,0,6">
+            <Run Text="Status: " FontWeight="SemiBold"/>
+            <Run Text="{Binding WsStatus}"/>
+        </TextBlock>
+
+        <!-- Messages -->
+        <ListBox Grid.Row="2"
+                 ItemsSource="{Binding WsMessages}"
+                 FontFamily="Consolas"
+                 FontSize="12"
+                 BorderThickness="1"
+                 BorderBrush="Gray"/>
+
+        <!-- Send -->
+        <DockPanel Grid.Row="3" Margin="0,8,0,0">
+            <Button Content="Clear"
+                    Command="{Binding WsClearMessagesCommand}"
+                    DockPanel.Dock="Right"
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Padding="8,4"
+                    Margin="5,0,0,0"/>
+            <Button Content="Send"
+                    Command="{Binding WsSendCommand}"
+                    DockPanel.Dock="Right"
+                    Style="{StaticResource MaterialDesignFlatMidBgButton}"
+                    Padding="12,4"
+                    Margin="5,0,0,0"/>
+            <TextBox Text="{Binding WsMessageToSend, UpdateSourceTrigger=PropertyChanged}"
+                     materialDesign:HintAssist.Hint="Message to send..."
+                     VerticalAlignment="Center"/>
+        </DockPanel>
+    </Grid>
+</TabItem>
+                
+                
+                
             </TabControl>
             
             <!-- Строка 3: Статус ответа-->
@@ -478,6 +665,53 @@
                             <DataGridTextColumn Header="Sent at" Binding="{Binding SentAt, StringFormat=HH:mm:ss}" Width="80"/>
                         </DataGrid.Columns>
                     </DataGrid>
+                </TabItem>
+                
+                <TabItem Header="Code">
+                    <DockPanel>
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="0,4,0,4">
+                            <ComboBox ItemsSource="{Binding CodeFormats}"
+                                      SelectedItem="{Binding SelectedCodeFormat}"
+                                      Width="150"
+                                      Margin="0,0,8,0"/>
+                            <Button Content="Generate"
+                                    Command="{Binding GenerateCodeCommand}"
+                                    Style="{StaticResource MaterialDesignFlatMidBgButton}"
+                                    Padding="12,4"
+                                    Margin="0,0,8,0"/>
+                            <Button Content="Copy"
+                                    Command="{Binding CopyGeneratedCodeCommand}"
+                                    Style="{StaticResource MaterialDesignFlatButton}"
+                                    Padding="8,4"/>
+                        </StackPanel>
+                        <TextBox Text="{Binding GeneratedCode, Mode=OneWay}"
+                                 IsReadOnly="True"
+                                 TextWrapping="NoWrap"
+                                 AcceptsReturn="True"
+                                 HorizontalScrollBarVisibility="Auto"
+                                 VerticalScrollBarVisibility="Auto"
+                                 FontFamily="Consolas"
+                                 BorderThickness="0"
+                                 Padding="8"/>
+                    </DockPanel>
+                </TabItem>
+                
+                <TabItem Header="Test Results">
+                    <ListView ItemsSource="{Binding TestResults}" Padding="8">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Margin="0,2">
+                                    <Ellipse Width="12" Height="12"
+                                             Fill="{Binding Passed, Converter={StaticResource BoolToTestResultBrushConverter}}"
+                                             Margin="0,0,8,0"
+                                             VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding Description}"
+                                               VerticalAlignment="Center"
+                                               FontFamily="Consolas"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
                 </TabItem>
                 
             </TabControl>

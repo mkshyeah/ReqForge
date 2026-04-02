@@ -36,6 +36,18 @@ namespace ReqForge.ViewModels
         [ObservableProperty] private RequestEnvironment? _selectedEnvironment;
         [ObservableProperty] private ObservableCollection<RequestEnvironment> _environments = new();
         [ObservableProperty] private bool _isDarkTheme = false;
+        [ObservableProperty] private string _searchText = string.Empty;
+        [ObservableProperty] private ObservableCollection<RequestCollection> _filteredCollections = new();
+        [ObservableProperty] private string _selectedAuthType = "None";
+        [ObservableProperty] private string _bearerToken = string.Empty;
+        [ObservableProperty] private string _basicAuthUsername = string.Empty;
+        [ObservableProperty] private string _basicAuthPassword = string.Empty;
+        [ObservableProperty] private string _apiKeyName = string.Empty;
+        [ObservableProperty] private string _apiKeyValue = string.Empty;
+        
+        
+
+        public List<string> AuthTypes { get; } = new() { "None", "Bearer Token", "Basic Auth", "API Key" };
 
         public List<string> Methods { get; } = new() { "GET", "POST", "PUT", "PATCH", "DELETE" };
         public List<string> BodyTypes { get; } = new() { "none", "json", "form-data", "raw" };
@@ -77,6 +89,7 @@ namespace ReqForge.ViewModels
             }
 
             if (Headers.Count == 0) Headers.Add(new HeaderItem("", ""));
+            InitWebSocket();
         }
 
 
@@ -136,9 +149,30 @@ namespace ReqForge.ViewModels
                 {
                     resolvedHeaders.Add(new HeaderItem("Content-Type", contentType));
                 }
+                
+                switch (SelectedAuthType)
+                {
+                    case "Bearer Token":
+                        if(!string.IsNullOrWhiteSpace(BearerToken))
+                            resolvedHeaders.Add(new HeaderItem("Authorization",$"Bearer {ResolveVariables(BearerToken)}"));
+                        break;
+                    case "Basic Auth":
+                        if (!string.IsNullOrWhiteSpace(BasicAuthUsername))
+                        {
+                            var credentials = Convert.ToBase64String(
+                                Encoding.UTF8.GetBytes($"{ResolveVariables(BasicAuthUsername)}:{ResolveVariables(BasicAuthPassword)}"));
+                            resolvedHeaders.Add(new HeaderItem("Authorization", $"Basic {credentials}"));
+                        }
+                        break;
+                    case "API Key":
+                        if (!string.IsNullOrWhiteSpace(ApiKeyName))
+                            resolvedHeaders.Add(new HeaderItem(ResolveVariables(ApiKeyName), ResolveVariables(ApiKeyValue)));
+                        break;
+                }
 
                 var result = await _service.SendAsync(SelectedMethod, resolvedUrl, resolvedHeaders, resolvedBody);
 
+                
                 StatusInfo = result.FullInfo;
 
                 ResponseHeadersText = string.Join("\n",
@@ -146,6 +180,8 @@ namespace ReqForge.ViewModels
 
 
                 ResponseBody = TryFormatJson(result.Content);
+                
+                RunTests(result);
                 
                 RequestHistory.Insert(0, new RequestHistoryItem
                 {
@@ -252,6 +288,34 @@ namespace ReqForge.ViewModels
         {
             if (!string.IsNullOrEmpty(ResponseBody))
                 System.Windows.Clipboard.SetText(ResponseBody);
+        }
+
+        partial void OnSearchTextChanged(string value)
+        {
+            ApplyFilter();
+        }
+
+        private void ApplyFilter()
+        {
+            if (string.IsNullOrWhiteSpace(SearchText))
+            {
+                FilteredCollections = new ObservableCollection<RequestCollection>(Collections);
+                return;
+            }
+
+            var filtered = Collections
+                .Select(c => new RequestCollection
+                {
+                    Name = c.Name,
+                    Requests = new ObservableCollection<SavedRequest>(
+                        c.Requests.Where(r =>
+                            r.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
+                            r.Url.Contains(SearchText, StringComparison.OrdinalIgnoreCase)))
+                })
+                .Where(c => c.Requests.Count > 0 ||
+                            c.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase));
+
+            FilteredCollections = new ObservableCollection<RequestCollection>(filtered);
         }
     }
     
