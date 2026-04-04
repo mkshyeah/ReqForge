@@ -2,44 +2,22 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using ReqForge.Data;
 using ReqForge.Models;
 
 namespace ReqForge.Services;
 
 public class AuthService : IAuthService
 {
-    
-    private List<User> _users;
-    
-    private static readonly string _filePath =
-        Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "users.json");
-    
-    private static readonly JsonSerializerOptions _jsonOptions = new()
-    {
-        WriteIndented = true
-    };
+    private readonly AppDbContext _db;
     
     // Свойства для хранения состояния текущей сессии
     public bool IsLoggedIn { get; private set; }
     public string? CurrentUsername { get; private set; }
 
-    public AuthService()
+    public AuthService(AppDbContext db)
     {
-        if (!File.Exists(_filePath))
-        {
-            _users = new List<User>();
-            return;
-        }
-
-        try
-        {
-            var json = File.ReadAllText(_filePath);
-            _users = JsonSerializer.Deserialize<List<User>>(json) ?? new List<User>();
-        }
-        catch
-        {
-            _users = new List<User>();
-        }
+        _db = db;
     }
     
     public bool Register(string username, string password)
@@ -49,15 +27,11 @@ public class AuthService : IAuthService
             return false;
         }
         
-        if (_users.Any(u => u.UserName.Equals(username, StringComparison.OrdinalIgnoreCase)))
+        if (_db.Users.Any(u => u.UserName == username))
             return false;
         
         // 1. Генерация соли (случайные 16 байт)
-        var saltBytes = new byte[16];
-        using (var rng = RandomNumberGenerator.Create())
-        {
-            rng.GetBytes(saltBytes);
-        }
+        var saltBytes = RandomNumberGenerator.GetBytes(16);
         var salt = Convert.ToBase64String(saltBytes);
         
         // 2. Хеширование пароля с этой солью
@@ -72,8 +46,8 @@ public class AuthService : IAuthService
             CreatedAt = DateTime.UtcNow,
         };
         
-        _users.Add(newUser);
-        SaveUsers();
+        _db.Users.Add(newUser);
+        _db.SaveChanges();
         
         // 4. Автоматический вход после регистрации
         IsLoggedIn = true;
@@ -83,7 +57,7 @@ public class AuthService : IAuthService
 
     public bool Login(string username, string password)
     {
-        var user = _users.FirstOrDefault(u => u.UserName.Equals(username, StringComparison.OrdinalIgnoreCase));
+        var user = _db.Users.FirstOrDefault(u => u.UserName==username);
 
         if (user == null) return false;
         
@@ -114,11 +88,5 @@ public class AuthService : IAuthService
         var hashBytes = SHA256.HashData(bytes);
         // Возвращаем как строку Base64
         return Convert.ToBase64String(hashBytes);
-    }
-
-    private void SaveUsers()
-    {
-        var json = JsonSerializer.Serialize(_users, _jsonOptions);
-        File.WriteAllText(_filePath, json);
     }
 }

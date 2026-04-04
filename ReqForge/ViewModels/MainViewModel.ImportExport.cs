@@ -21,7 +21,7 @@ public partial class MainViewModel
 
         if (dialog.ShowDialog() == true)
         {
-            var json = JsonSerializer.Serialize(Collections.ToString(), _jsonOptions);
+            var json = JsonSerializer.Serialize(Collections.ToList(), _jsonOptions);
             File.WriteAllText(dialog.FileName, json);
         }
     }

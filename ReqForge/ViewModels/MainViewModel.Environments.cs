@@ -44,7 +44,7 @@ public partial class MainViewModel
                 .ToList()
         }).ToList();
         
-        _envStorage.SaveAll(dtos);
+        _envStorage.SaveAll(dtos, CurrentUsername);
     }
     
     private string ResolveVariables(string input)

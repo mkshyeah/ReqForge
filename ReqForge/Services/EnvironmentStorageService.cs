@@ -1,6 +1,5 @@
-﻿using System.IO;
-using System.Text.Json;
-using ReqForge.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using ReqForge.Data;
 using ReqForge.Models.DTOs;
 using ReqForge.Services.Interfaces;
 
@@ -8,35 +7,45 @@ namespace ReqForge.Services;
 
 public class EnvironmentStorageService : IEnvironmentStorageService
 {
-    private static readonly string _filePath =
-        Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "environments.json");
-    
-    private static readonly JsonSerializerOptions _jsonOptions = new()
-    {
-        WriteIndented = true
-    };
-    
-    public List<RequestEnvironmentDto> LoadAll()
-    {
-        if (!File.Exists(_filePath))
-        {
-            return new List<RequestEnvironmentDto>();
-        }
+    private readonly AppDbContext _db;
 
-        try
-        {
-            var json = File.ReadAllText(_filePath);
-            return JsonSerializer.Deserialize<List<RequestEnvironmentDto>>(json) ?? new List<RequestEnvironmentDto>();
-        }
-        catch
-        {
-            return new List<RequestEnvironmentDto>();
-        }
+    public EnvironmentStorageService(AppDbContext db)
+    {
+        _db = db;
     }
 
-    public void SaveAll(List<RequestEnvironmentDto> environments)
+    public List<RequestEnvironmentDto> LoadAll(string username)
     {
-        var json = JsonSerializer.Serialize(environments, _jsonOptions);
-        File.WriteAllText(_filePath, json);
+        var user = _db.Users.FirstOrDefault(u => u.UserName == username);
+        if (user == null) return new List<RequestEnvironmentDto>();
+
+        return _db.Environments
+            .Where(e => e.UserId == user.Id)
+            .Include(e => e.Variables)
+            .ToList();
+    }
+
+    public void SaveAll(List<RequestEnvironmentDto> environments, string username)
+    {
+        var user = _db.Users.FirstOrDefault(u => u.UserName == username);
+        if (user == null) return;
+
+        var existing = _db.Environments
+            .Where(e => e.UserId == user.Id)
+            .ToList();
+        _db.Environments.RemoveRange(existing);
+
+        foreach (var env in environments)
+        {
+            env.UserId = user.Id;
+            env.Id = 0;
+            foreach (var v in env.Variables)
+            {
+                v.Id = 0;
+                v.EnvironmentId = 0;
+            }
+        }
+        _db.Environments.AddRange(environments);
+        _db.SaveChanges();
     }
 }

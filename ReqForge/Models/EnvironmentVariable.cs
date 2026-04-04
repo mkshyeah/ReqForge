@@ -4,6 +4,7 @@ namespace ReqForge.Models;
 
 public partial class EnvironmentVariable : ObservableObject
 {
+    
     [ObservableProperty]
     private string _key = string.Empty;
 

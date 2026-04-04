@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ReqForge.Models;
+using ReqForge.Models.DTOs;
 using ReqForge.Services;
 
 namespace ReqForge.ViewModels;
@@ -78,13 +79,26 @@ public partial class MainViewModel
         {
             Collections = new ObservableCollection<RequestCollection>(
                 _storage.LoadAll(CurrentUsername));
+
+            Environments.Clear();
+            var envDtos = _envStorage.LoadAll(CurrentUsername);
+            foreach (var dto in envDtos)
+            {
+                var env = new RequestEnvironment { Name = dto.Name };
+                foreach (var vDto in dto.Variables)
+                    env.Variables.Add(new EnvironmentVariable(vDto.Key, vDto.Value));
+                Environments.Add(env);
+            }
+
             ApplyFilter();
         }
         else
         {
             Collections = new ObservableCollection<RequestCollection>();
+            Environments.Clear();
         }
 
         SelectedCollection = null;
+        SelectedEnvironment = null;
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using ReqForge.Data;
 using ReqForge.Models;
 using ReqForge.Services;
 using ReqForge.ViewModels;
@@ -14,10 +15,14 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+
+        var db = new AppDbContext();
+        db.Database.EnsureCreated();
+        
         var service = new HttpClientService();
-        var collectionStorage = new CollectionStorageService();
-        var envStorage = new EnvironmentStorageService();
-        var authService = new AuthService();
+        var collectionStorage = new CollectionStorageService(db);
+        var envStorage = new EnvironmentStorageService(db);
+        var authService = new AuthService(db);
         // Устанавливаем DataContext. Теперь {Binding} знает, где искать свойства.
 
         DataContext = new MainViewModel(service, collectionStorage, envStorage,authService );

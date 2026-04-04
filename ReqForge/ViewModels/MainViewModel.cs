@@ -75,19 +75,6 @@ namespace ReqForge.ViewModels
             // Загружаем коллекции при старте
             Collections = new ObservableCollection<RequestCollection>();
 
-            // Загружаем окружение
-            var envDtos = _envStorage.LoadAll();
-            foreach (var dto in envDtos)
-            {
-                var env = new RequestEnvironment { Name = dto.Name };
-                foreach (var vDto in dto.Variables)
-                {
-                    env.Variables.Add(new EnvironmentVariable(vDto.Key, vDto.Value));
-                }
-
-                Environments.Add(env);
-            }
-
             if (Headers.Count == 0) Headers.Add(new HeaderItem("", ""));
             InitWebSocket();
         }
@@ -245,6 +232,8 @@ namespace ReqForge.ViewModels
                 Headers.Remove(header);
             }
         }
+        
+        
 
         // Help-classes
 

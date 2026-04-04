@@ -2,6 +2,9 @@ namespace ReqForge.Models;
 
 public class RequestHistoryItem
 {
+    public int Id { get; set; }
+    public int UserId { get; set; }
+
     public string Method { get; set; } = string.Empty;
     public string Url { get; set; } = string.Empty;
     public int StatusCode { get; set; }
