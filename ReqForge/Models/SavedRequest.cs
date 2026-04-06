@@ -11,6 +11,7 @@ public class SavedRequest
     public string Url { get; set; } = string.Empty;
     public string Method { get; set; } = string.Empty;
     public string Body { get; set; } = string.Empty;
+    public string BodyType { get; set; } = "none";
 
     public string AuthType { get; set; } = "None";
     public string BearerToken { get; set; } = string.Empty;
@@ -20,4 +21,5 @@ public class SavedRequest
     public string ApiKeyValue { get; set; } = string.Empty;
 
     public List<HeaderItemDto> Headers { get; set; } = new();
+    public List<QueryParamDto> QueryParams { get; set; } = new();
 }

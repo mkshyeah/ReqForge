@@ -3,21 +3,19 @@ using System.Text;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using MaterialDesignThemes.Wpf;
 using ReqForge.Models;
 using ReqForge.Models.DTOs;
-using ReqForge.Services;
 using ReqForge.Services.Interfaces;
 
 namespace ReqForge.ViewModels
 {
-    // partial обязателен — генератор допишет вторую половину класса за тебя
     public partial class MainViewModel : ObservableObject
     {
         private readonly IHttpClientService _service;
         private readonly ICollectionStorageService _storage;
         private readonly IEnvironmentStorageService _envStorage;
         private readonly IAuthService _authService;
+        private readonly IRequestHistoryService _historyService;
 
         [ObservableProperty] [NotifyCanExecuteChangedFor(nameof(SendCommand))]
         private string _url = string.Empty;
@@ -35,7 +33,7 @@ namespace ReqForge.ViewModels
         [ObservableProperty] private RequestCollection? _selectedCollection;
         [ObservableProperty] private RequestEnvironment? _selectedEnvironment;
         [ObservableProperty] private ObservableCollection<RequestEnvironment> _environments = new();
-        [ObservableProperty] private bool _isDarkTheme = false;
+        [ObservableProperty] private bool _isDarkTheme;
         [ObservableProperty] private string _searchText = string.Empty;
         [ObservableProperty] private ObservableCollection<RequestCollection> _filteredCollections = new();
         [ObservableProperty] private string _selectedAuthType = "None";
@@ -44,11 +42,8 @@ namespace ReqForge.ViewModels
         [ObservableProperty] private string _basicAuthPassword = string.Empty;
         [ObservableProperty] private string _apiKeyName = string.Empty;
         [ObservableProperty] private string _apiKeyValue = string.Empty;
-        
-        
 
         public List<string> AuthTypes { get; } = new() { "None", "Bearer Token", "Basic Auth", "API Key" };
-
         public List<string> Methods { get; } = new() { "GET", "POST", "PUT", "PATCH", "DELETE" };
         public List<string> BodyTypes { get; } = new() { "none", "json", "form-data", "raw" };
         public ObservableCollection<HeaderItem> Headers { get; } = new();
@@ -58,29 +53,29 @@ namespace ReqForge.ViewModels
 
         [ObservableProperty] private ObservableCollection<RequestCollection> _collections = new();
 
-        public MainViewModel(IHttpClientService service, ICollectionStorageService storage,
-            IEnvironmentStorageService envStorage, IAuthService authService)
+        public MainViewModel(
+            IHttpClientService service,
+            ICollectionStorageService storage,
+            IEnvironmentStorageService envStorage,
+            IAuthService authService,
+            IRequestHistoryService historyService)
         {
             _service = service;
             _storage = storage;
             _envStorage = envStorage;
             _authService = authService;
+            _historyService = historyService;
 
             IsLoggedIn = _authService.IsLoggedIn;
             CurrentUsername = _authService.CurrentUsername ?? string.Empty;
             AuthErrorMessage = string.Empty;
-            
-            
 
-            // Загружаем коллекции при старте
             Collections = new ObservableCollection<RequestCollection>();
 
             if (Headers.Count == 0) Headers.Add(new HeaderItem("", ""));
             InitWebSocket();
         }
 
-
-        // Генератор создаст свойство SendCommand
         [RelayCommand(CanExecute = nameof(CanSend))]
         private async Task Send()
         {
@@ -92,10 +87,11 @@ namespace ReqForge.ViewModels
                 ResponseHeadersText = string.Empty;
 
                 var resolvedUrl = ResolveVariables(Url);
-                
+
                 var activeParams = QueryParams
                     .Where(p => !string.IsNullOrWhiteSpace(p.Key))
-                    .Select(p => $"{Uri.EscapeDataString(ResolveVariables(p.Key))}={Uri.EscapeDataString((ResolveVariables(p.Value)))}")
+                    .Select(p =>
+                        $"{Uri.EscapeDataString(ResolveVariables(p.Key))}={Uri.EscapeDataString(ResolveVariables(p.Value))}")
                     .ToList();
 
                 if (activeParams.Count > 0)
@@ -103,7 +99,7 @@ namespace ReqForge.ViewModels
                     var separator = resolvedUrl.Contains('?') ? "&" : "?";
                     resolvedUrl += separator + string.Join("&", activeParams);
                 }
-                
+
                 string? resolvedBody = null;
                 string? contentType = null;
 
@@ -120,7 +116,8 @@ namespace ReqForge.ViewModels
                     case "form-data":
                         resolvedBody = string.Join("&", FormDataItems
                             .Where(f => !string.IsNullOrWhiteSpace(f.Key))
-                            .Select(f => $"{Uri.EscapeDataString(ResolveVariables(f.Key))}={Uri.EscapeDataString(ResolveVariables(f.Value))}"));
+                            .Select(f =>
+                                $"{Uri.EscapeDataString(ResolveVariables(f.Key))}={Uri.EscapeDataString(ResolveVariables(f.Value))}"));
                         contentType = "application/x-www-form-urlencoded";
                         break;
                 }
@@ -136,48 +133,55 @@ namespace ReqForge.ViewModels
                 {
                     resolvedHeaders.Add(new HeaderItem("Content-Type", contentType));
                 }
-                
+
                 switch (SelectedAuthType)
                 {
                     case "Bearer Token":
-                        if(!string.IsNullOrWhiteSpace(BearerToken))
-                            resolvedHeaders.Add(new HeaderItem("Authorization",$"Bearer {ResolveVariables(BearerToken)}"));
+                        if (!string.IsNullOrWhiteSpace(BearerToken))
+                            resolvedHeaders.Add(new HeaderItem("Authorization",
+                                $"Bearer {ResolveVariables(BearerToken)}"));
                         break;
                     case "Basic Auth":
                         if (!string.IsNullOrWhiteSpace(BasicAuthUsername))
                         {
                             var credentials = Convert.ToBase64String(
-                                Encoding.UTF8.GetBytes($"{ResolveVariables(BasicAuthUsername)}:{ResolveVariables(BasicAuthPassword)}"));
+                                Encoding.UTF8.GetBytes(
+                                    $"{ResolveVariables(BasicAuthUsername)}:{ResolveVariables(BasicAuthPassword)}"));
                             resolvedHeaders.Add(new HeaderItem("Authorization", $"Basic {credentials}"));
                         }
+
                         break;
                     case "API Key":
                         if (!string.IsNullOrWhiteSpace(ApiKeyName))
-                            resolvedHeaders.Add(new HeaderItem(ResolveVariables(ApiKeyName), ResolveVariables(ApiKeyValue)));
+                            resolvedHeaders.Add(new HeaderItem(ResolveVariables(ApiKeyName),
+                                ResolveVariables(ApiKeyValue)));
                         break;
                 }
 
                 var result = await _service.SendAsync(SelectedMethod, resolvedUrl, resolvedHeaders, resolvedBody);
 
-                
                 StatusInfo = result.FullInfo;
 
                 ResponseHeadersText = string.Join("\n",
                     result.ResponseHeaders.Select(h => $"{h.Key} : {h.Value}"));
 
-
                 ResponseBody = TryFormatJson(result.Content);
-                
+
                 RunTests(result);
-                
-                RequestHistory.Insert(0, new RequestHistoryItem
+
+                var historyItem = new RequestHistoryItem
                 {
                     Method = SelectedMethod,
                     Url = resolvedUrl,
                     StatusCode = (int)result.StatusCode,
                     ElapsedTime = result.ElapsedTime.TotalMilliseconds.ToString("F0") + " ms",
-                    SentAt = DateTime.Now
-                });
+                    SentAt = DateTime.UtcNow
+                };
+
+                if (IsLoggedIn && !string.IsNullOrEmpty(CurrentUsername))
+                    _historyService.Add(historyItem, CurrentUsername);
+
+                RequestHistory.Insert(0, historyItem);
             }
             catch (Exception ex)
             {
@@ -191,51 +195,31 @@ namespace ReqForge.ViewModels
         }
 
         [RelayCommand]
-        private void AddHeader()
-        {
-            Headers.Add(new HeaderItem("", ""));
-        }
+        private void AddHeader() => Headers.Add(new HeaderItem("", ""));
 
         [RelayCommand]
-        private void AddQueryParam()
-        {
-            QueryParams.Add(new QueryParam("",""));
-        }
+        private void AddQueryParam() => QueryParams.Add(new QueryParam("", ""));
 
         [RelayCommand]
         private void RemoveQueryParam(QueryParam param)
         {
-            if (param != null)
-            {
-                QueryParams.Remove(param);
-            }
+            if (param != null) QueryParams.Remove(param);
         }
 
         [RelayCommand]
-        private void AddFormDataItem()
-        {
-            FormDataItems.Add(new QueryParam("", ""));
-        }
+        private void AddFormDataItem() => FormDataItems.Add(new QueryParam("", ""));
 
         [RelayCommand]
         private void RemoveFormDataItem(QueryParam item)
         {
-            if (item != null)
-                FormDataItems.Remove(item);
+            if (item != null) FormDataItems.Remove(item);
         }
 
         [RelayCommand]
         private void RemoveHeader(HeaderItem header)
         {
-            if (header != null)
-            {
-                Headers.Remove(header);
-            }
+            if (header != null) Headers.Remove(header);
         }
-        
-        
-
-        // Help-classes
 
         private bool CanSend() => !IsLoading && !string.IsNullOrWhiteSpace(Url);
 
@@ -249,7 +233,6 @@ namespace ReqForge.ViewModels
             {
                 using var doc = JsonDocument.Parse(content);
                 return JsonSerializer.Serialize(doc, _jsonOptions);
-
             }
             catch
             {
@@ -271,7 +254,7 @@ namespace ReqForge.ViewModels
             if (SelectedEnvironment == env) SelectedEnvironment = null;
             SaveEnvironments();
         }
-        
+
         [RelayCommand]
         private void CopyResponse()
         {
@@ -279,10 +262,15 @@ namespace ReqForge.ViewModels
                 System.Windows.Clipboard.SetText(ResponseBody);
         }
 
-        partial void OnSearchTextChanged(string value)
+        [RelayCommand]
+        private void ClearHistory()
         {
-            ApplyFilter();
+            RequestHistory.Clear();
+            if (IsLoggedIn && !string.IsNullOrEmpty(CurrentUsername))
+                _historyService.ClearByUser(CurrentUsername);
         }
+
+        partial void OnSearchTextChanged(string value) => ApplyFilter();
 
         private void ApplyFilter()
         {
@@ -307,5 +295,4 @@ namespace ReqForge.ViewModels
             FilteredCollections = new ObservableCollection<RequestCollection>(filtered);
         }
     }
-    
 }

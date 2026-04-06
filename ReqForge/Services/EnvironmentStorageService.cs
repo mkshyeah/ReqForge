@@ -22,7 +22,43 @@ public class EnvironmentStorageService : IEnvironmentStorageService
         return _db.Environments
             .Where(e => e.UserId == user.Id)
             .Include(e => e.Variables)
+            .AsNoTracking()
             .ToList();
+    }
+
+    public void Add(RequestEnvironmentDto environment, string username)
+    {
+        var user = _db.Users.FirstOrDefault(u => u.UserName == username);
+        if (user == null) return;
+
+        environment.UserId = user.Id;
+        _db.Environments.Add(environment);
+        _db.SaveChanges();
+    }
+
+    public void Update(RequestEnvironmentDto environment)
+    {
+        var existing = _db.Environments
+            .Include(e => e.Variables)
+            .FirstOrDefault(e => e.Id == environment.Id);
+
+        if (existing == null) return;
+
+        existing.Name = environment.Name;
+
+        _db.EnvironmentVariables.RemoveRange(existing.Variables);
+        existing.Variables = environment.Variables;
+
+        _db.SaveChanges();
+    }
+
+    public void Delete(int environmentId)
+    {
+        var env = _db.Environments.Find(environmentId);
+        if (env == null) return;
+
+        _db.Environments.Remove(env);
+        _db.SaveChanges();
     }
 
     public void SaveAll(List<RequestEnvironmentDto> environments, string username)
@@ -45,6 +81,7 @@ public class EnvironmentStorageService : IEnvironmentStorageService
                 v.EnvironmentId = 0;
             }
         }
+
         _db.Environments.AddRange(environments);
         _db.SaveChanges();
     }

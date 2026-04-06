@@ -6,28 +6,24 @@ using ReqForge.ViewModels;
 
 namespace ReqForge;
 
-/// <summary>
-/// Interaction logic for MainWindow.xaml
-/// </summary>
 public partial class MainWindow : Window
 {
-    
     public MainWindow()
     {
         InitializeComponent();
 
         var db = new AppDbContext();
         db.Database.EnsureCreated();
-        
-        var service = new HttpClientService();
+
+        var httpService = new HttpClientService();
         var collectionStorage = new CollectionStorageService(db);
         var envStorage = new EnvironmentStorageService(db);
         var authService = new AuthService(db);
-        // Устанавливаем DataContext. Теперь {Binding} знает, где искать свойства.
+        var historyService = new RequestHistoryService(db);
 
-        DataContext = new MainViewModel(service, collectionStorage, envStorage,authService );
+        DataContext = new MainViewModel(httpService, collectionStorage, envStorage, authService, historyService);
     }
-    
+
     private void TreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
     {
         var vm = (MainViewModel)DataContext;
@@ -40,5 +36,4 @@ public partial class MainWindow : Window
             vm.SelectedCollection = coll;
         }
     }
-    
 }

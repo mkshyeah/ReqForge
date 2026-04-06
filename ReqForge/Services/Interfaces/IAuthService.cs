@@ -1,4 +1,4 @@
-﻿namespace ReqForge.Services;
+﻿namespace ReqForge.Services.Interfaces;
 
 public interface IAuthService
 {

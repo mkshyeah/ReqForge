@@ -1,5 +1,4 @@
 ﻿using System.IO;
-using System.Net;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.Input;
 using ReqForge.Models;
@@ -43,11 +42,13 @@ public partial class MainViewModel
                 if (imported != null)
                 {
                     foreach (var coll in imported)
-                    {
                         Collections.Add(coll);
-                    }
 
                     _storage.SaveAll(Collections.ToList(), CurrentUsername);
+
+                    Collections = new System.Collections.ObjectModel.ObservableCollection<RequestCollection>(
+                        _storage.LoadAll(CurrentUsername));
+                    ApplyFilter();
                 }
             }
             catch

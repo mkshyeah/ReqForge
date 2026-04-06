@@ -3,18 +3,16 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ReqForge.Models;
 using ReqForge.Models.DTOs;
-using ReqForge.Services;
 
 namespace ReqForge.ViewModels;
 
 public partial class MainViewModel
 {
-    
-    [ObservableProperty]private bool _isLoggedIn;
-    [ObservableProperty]private string _currentUsername = string.Empty;
-    [ObservableProperty]private string _loginUserName =  string.Empty;
-    [ObservableProperty]private string _loginPassword  = string.Empty;
-    [ObservableProperty]private string _authErrorMessage = string.Empty;
+    [ObservableProperty] private bool _isLoggedIn;
+    [ObservableProperty] private string _currentUsername = string.Empty;
+    [ObservableProperty] private string _loginUserName = string.Empty;
+    [ObservableProperty] private string _loginPassword = string.Empty;
+    [ObservableProperty] private string _authErrorMessage = string.Empty;
 
     [RelayCommand]
     private void Login()
@@ -25,6 +23,7 @@ public partial class MainViewModel
             AuthErrorMessage = "Username and password are required";
             return;
         }
+
         if (!_authService.Login(LoginUserName, LoginPassword))
         {
             AuthErrorMessage = "User with this name and password doesn't exist";
@@ -33,7 +32,7 @@ public partial class MainViewModel
 
         IsLoggedIn = true;
         CurrentUsername = _authService.CurrentUsername ?? LoginUserName;
-        ReloadCollections();
+        ReloadUserData();
         LoginUserName = string.Empty;
         LoginPassword = string.Empty;
         AuthErrorMessage = string.Empty;
@@ -48,21 +47,21 @@ public partial class MainViewModel
             AuthErrorMessage = "Username and password are required";
             return;
         }
-        
+
         if (!_authService.Register(LoginUserName, LoginPassword))
         {
             AuthErrorMessage = "User already exists";
             return;
         }
-        
+
         IsLoggedIn = true;
         CurrentUsername = _authService.CurrentUsername ?? LoginUserName;
-        ReloadCollections();
+        ReloadUserData();
         LoginUserName = string.Empty;
         LoginPassword = string.Empty;
         AuthErrorMessage = string.Empty;
     }
-    
+
     [RelayCommand]
     private void Logout()
     {
@@ -70,10 +69,10 @@ public partial class MainViewModel
         _authService.Logout();
         IsLoggedIn = false;
         CurrentUsername = string.Empty;
-        ReloadCollections();
+        ReloadUserData();
     }
 
-    private void ReloadCollections()
+    private void ReloadUserData()
     {
         if (IsLoggedIn && !string.IsNullOrEmpty(CurrentUsername))
         {
@@ -90,12 +89,18 @@ public partial class MainViewModel
                 Environments.Add(env);
             }
 
+            RequestHistory.Clear();
+            var history = _historyService.LoadByUser(CurrentUsername);
+            foreach (var item in history)
+                RequestHistory.Add(item);
+
             ApplyFilter();
         }
         else
         {
             Collections = new ObservableCollection<RequestCollection>();
             Environments.Clear();
+            RequestHistory.Clear();
         }
 
         SelectedCollection = null;

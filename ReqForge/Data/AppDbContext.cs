@@ -11,6 +11,7 @@ public class AppDbContext : DbContext
     public DbSet<RequestCollection> Collections => Set<RequestCollection>();
     public DbSet<SavedRequest> SavedRequests => Set<SavedRequest>();
     public DbSet<HeaderItemDto> RequestHeaders => Set<HeaderItemDto>();
+    public DbSet<QueryParamDto> QueryParams => Set<QueryParamDto>();
     public DbSet<RequestEnvironmentDto> Environments => Set<RequestEnvironmentDto>();
     public DbSet<EnvironmentVariableDto> EnvironmentVariables => Set<EnvironmentVariableDto>();
     public DbSet<RequestHistoryItem> RequestHistory => Set<RequestHistoryItem>();
@@ -28,10 +29,12 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<User>(e =>
         {
             e.HasIndex(u => u.UserName).IsUnique();
+
             e.HasMany(u => u.Collections)
                 .WithOne()
                 .HasForeignKey(c => c.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+
             e.HasMany(u => u.History)
                 .WithOne()
                 .HasForeignKey(h => h.UserId)
@@ -52,6 +55,11 @@ public class AppDbContext : DbContext
                 .WithOne()
                 .HasForeignKey(h => h.SavedRequestId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasMany(r => r.QueryParams)
+                .WithOne()
+                .HasForeignKey(q => q.SavedRequestId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<RequestEnvironmentDto>(e =>
@@ -60,6 +68,11 @@ public class AppDbContext : DbContext
                 .WithOne()
                 .HasForeignKey(v => v.EnvironmentId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<RequestHistoryItem>(e =>
+        {
+            e.HasIndex(h => h.SentAt);
         });
     }
 }
