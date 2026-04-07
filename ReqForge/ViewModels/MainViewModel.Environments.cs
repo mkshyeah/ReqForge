@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Input;
 using ReqForge.Models;
 using ReqForge.Models.DTOs;
 
@@ -9,11 +9,15 @@ public partial class MainViewModel
     [RelayCommand]
     private void CreateEnvironment()
     {
-        var newEnv = new RequestEnvironment { Name = $"Env {Environments.Count+1}"};
-        newEnv.Variables.Add(new EnvironmentVariable("base_url","https://api.example.com"));
-        Environments.Add(newEnv);
-        SelectedEnvironment = newEnv;
-        SaveEnvironments();
+        var dialog = new Views.InputDialog("New Environment", "Enter environment name:");
+        if (dialog.ShowDialog() == true && !string.IsNullOrWhiteSpace(dialog.ResponseText))
+        {
+            var newEnv = new RequestEnvironment { Name = dialog.ResponseText.Trim() };
+            newEnv.Variables.Add(new EnvironmentVariable("base_url", "https://api.example.com"));
+            Environments.Add(newEnv);
+            SelectedEnvironment = newEnv;
+            SaveEnvironments();
+        }
     }
 
     [RelayCommand]

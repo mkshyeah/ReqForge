@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ReqForge.Services;
 
@@ -6,10 +6,16 @@ namespace ReqForge.ViewModels;
 
 public partial class MainViewModel
 {
-    [ObservableProperty] private string _selectedCodeFormat = "cURL";
+    [ObservableProperty] private string _selectedCodeFormat = "cURL (bash)";
     [ObservableProperty] private string _generatedCode = string.Empty;
-    
-    public List<string> CodeFormats { get; } = new() { "cURL", "C# HttpClient" };
+
+    public List<string> CodeFormats { get; } = new()
+    {
+        "cURL (bash)",
+        "cURL (Windows)",
+        "PowerShell",
+        "C# HttpClient"
+    };
 
     [RelayCommand]
     private void GenerateCode()
@@ -20,16 +26,18 @@ public partial class MainViewModel
             return;
         }
 
+        var body = SelectedBodyType != "none" ? RequestBody : null;
+
         GeneratedCode = SelectedCodeFormat switch
         {
-            "cURL" => CodeGeneratorService.ToCurl(SelectedMethod, Url, Headers, 
-                SelectedBodyType != "none" ? RequestBody : null),
-            "C# HttpClient" => CodeGeneratorService.ToCSharpHttpClient(SelectedMethod, Url, Headers,
-                SelectedBodyType != "none" ? RequestBody : null),
+            "cURL (bash)" => CodeGeneratorService.ToCurlBash(SelectedMethod, Url, Headers, body),
+            "cURL (Windows)" => CodeGeneratorService.ToCurlWindows(SelectedMethod, Url, Headers, body),
+            "PowerShell" => CodeGeneratorService.ToPowerShell(SelectedMethod, Url, Headers, body),
+            "C# HttpClient" => CodeGeneratorService.ToCSharpHttpClient(SelectedMethod, Url, Headers, body),
             _ => string.Empty
         };
     }
-    
+
     [RelayCommand]
     private void CopyGeneratedCode()
     {

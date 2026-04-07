@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -9,7 +9,7 @@ namespace ReqForge.ViewModels;
 public partial class MainViewModel
 {
     private readonly WebSocketClientService _wsService = new();
-    [ObservableProperty] private string _wsUrl = "ws://";
+    [ObservableProperty] private string _wsUrl = "wss://echo.websocket.org";
     [ObservableProperty] private string _wsMessageToSend = string.Empty;
     [ObservableProperty] private string _wsStatus = "Disconnected";
     [ObservableProperty] private bool _wsIsConnected;

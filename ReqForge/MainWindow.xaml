@@ -4,20 +4,18 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-        
         xmlns:local="clr-namespace:ReqForge"
         xmlns:models="clr-namespace:ReqForge.Models"
         xmlns:vm="clr-namespace:ReqForge.ViewModels"
         xmlns:helpers="clr-namespace:ReqForge.Helpers"
         mc:Ignorable="d"
-        
         d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
-        
         Background="{DynamicResource MaterialDesign.Brush.Background}"
         TextElement.Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
-        
-        Title="ReqForge" Width="1200" Height="750" WindowStartupLocation="CenterScreen">
-    
+        Title="ReqForge" Width="1280" Height="800"
+        MinWidth="960" MinHeight="640"
+        WindowStartupLocation="CenterScreen">
+
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
         <helpers:BindingProxy x:Key="Proxy" Data="{Binding}"/>
@@ -27,349 +25,636 @@
         <helpers:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter"/>
         <helpers:StringMatchToVisibilityConverter x:Key="StringMatchToVisibilityConverter"/>
         <helpers:BoolToTestResultBrushConverter x:Key="BoolToTestResultBrushConverter"/>
+        <helpers:NullToCollapsedConverter x:Key="NullToCollapsedConverter"/>
+
+        <Style x:Key="CleanInput" TargetType="TextBox" BasedOn="{StaticResource MaterialDesignOutlinedTextBox}">
+            <Setter Property="materialDesign:HintAssist.IsFloating" Value="False"/>
+            <Setter Property="materialDesign:HintAssist.FloatingOffset" Value="0,-16"/>
+            <Setter Property="FontSize" Value="13.5"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="materialDesign:TextFieldAssist.UnderlineBrush" Value="Transparent"/>
+        </Style>
+
+        <Style x:Key="CleanComboBox" TargetType="ComboBox" BasedOn="{StaticResource MaterialDesignOutlinedComboBox}">
+            <Setter Property="materialDesign:HintAssist.IsFloating" Value="False"/>
+            <Setter Property="FontSize" Value="13.5"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="Padding" Value="10,7"/>
+        </Style>
+
+        <Style x:Key="CleanDataGrid" TargetType="DataGrid" BasedOn="{StaticResource MaterialDesignDataGrid}">
+            <Setter Property="GridLinesVisibility" Value="All"/>
+            <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource MaterialDesign.Brush.ForegroundLight}"/>
+            <Setter Property="VerticalGridLinesBrush" Value="{DynamicResource MaterialDesign.Brush.ForegroundLight}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesign.Brush.ForegroundLight}"/>
+            <Setter Property="RowHeight" Value="40"/>
+            <Setter Property="AutoGenerateColumns" Value="False"/>
+            <Setter Property="CanUserAddRows" Value="False"/>
+            <Setter Property="CanUserDeleteRows" Value="False"/>
+            <Setter Property="HeadersVisibility" Value="Column"/>
+            <Setter Property="SelectionUnit" Value="CellOrRowHeader"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="ColumnHeaderHeight" Value="36"/>
+        </Style>
+
+        <Style x:Key="DataGridCellTextBox" TargetType="TextBox">
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="FontSize" Value="13.5"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="materialDesign:HintAssist.IsFloating" Value="False"/>
+            <Setter Property="materialDesign:TextFieldAssist.DecorationVisibility" Value="Hidden"/>
+            <Setter Property="CaretBrush" Value="{DynamicResource MaterialDesign.Brush.Foreground}"/>
+        </Style>
+
+        <Style x:Key="CleanPasswordBox" TargetType="PasswordBox" BasedOn="{StaticResource MaterialDesignOutlinedPasswordBox}">
+            <Setter Property="materialDesign:HintAssist.IsFloating" Value="False"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="10,8"/>
+        </Style>
     </Window.Resources>
-    
+
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="280" MinWidth="200"/>
-            <ColumnDefinition Width="Auto"/> <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="280" MinWidth="200" MaxWidth="420"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <Grid Grid.Column="0" Background="{DynamicResource MaterialDesign.Brush.Card.Background}">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
+        <!-- ══════════════════════════════════════════════════════ -->
+        <!-- SIDEBAR -->
+        <!-- ══════════════════════════════════════════════════════ -->
+        <Border Grid.Column="0"
+                Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+                BorderBrush="{DynamicResource MaterialDesign.Brush.ForegroundLight}"
+                BorderThickness="0,0,1,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
 
-            <StackPanel Grid.Row="0" Margin="10,10,10,8">
-                <Button Content="NEW COLLECTION" 
-                        Command="{Binding CreateCollectionCommand}"
-                        Style="{StaticResource MaterialDesignFlatMidBgButton}"
-                        Margin="0,0,0,5"/>
-                <Button Content="SAVE CURRENT" 
-                        Command="{Binding SaveRequestCommand}"
-                        Style="{StaticResource MaterialDesignOutlinedButton}"
-                        ToolTip="Save current request to selected collection"/>
-                <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
-                    <Button Content="EXPORT"
-                            Command="{Binding ExportCollectionsCommand}"
-                            Style="{StaticResource MaterialDesignOutlinedButton}"
-                            Width="125"
-                            Margin="0,0,5,0"/>
-                    <Button Content="IMPORT"
-                            Command="{Binding ImportCollectionsCommand}"
-                            Style="{StaticResource MaterialDesignOutlinedButton}"
-                            Width="125"/>
-                </StackPanel>
-                
-                <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                         materialDesign:HintAssist.Hint="Search requests..."
-                         materialDesign:TextFieldAssist.HasClearButton="True"
-                         Margin="10,5,10,0"/>
-            </StackPanel>
+                <!-- Brand -->
+                <Border Grid.Row="0" Padding="16,16,16,12"
+                        BorderBrush="{DynamicResource MaterialDesign.Brush.ForegroundLight}"
+                        BorderThickness="0,0,0,1">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Api"
+                                                 Width="26" Height="26"
+                                                 Foreground="{DynamicResource PrimaryHueMidBrush}"
+                                                 VerticalAlignment="Center"
+                                                 Margin="0,0,10,0"/>
+                        <TextBlock Text="ReqForge"
+                                   FontSize="20" FontWeight="Bold"
+                                   Foreground="{DynamicResource PrimaryHueMidBrush}"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
 
-            <TreeView Grid.Row="1" 
-                      ItemsSource="{Binding FilteredCollections}"
-                      SelectedItemChanged="TreeView_SelectedItemChanged"
-                      BorderThickness="0,1,0,0"
-                      BorderBrush="#E0E0E0">
-                <TreeView.ItemContainerStyle>
-                    <Style TargetType="TreeViewItem" BasedOn="{StaticResource {x:Type TreeViewItem}}">
-                        <Setter Property="Padding" Value="4,2"/>
-                        <Setter Property="IsExpanded" Value="True"/>
-                    </Style>
-                </TreeView.ItemContainerStyle>
-                <TreeView.ItemTemplate>
-                    <HierarchicalDataTemplate ItemsSource="{Binding Requests}" DataType="{x:Type models:RequestCollection}">
+                <!-- Actions -->
+                <StackPanel Grid.Row="1" Margin="12,12,12,4">
+                    <Button Command="{Binding CreateCollectionCommand}"
+                            Style="{StaticResource MaterialDesignFlatMidBgButton}"
+                            HorizontalContentAlignment="Center"
+                            IsEnabled="{Binding IsLoggedIn}"
+                            Height="36" Margin="0,0,0,6">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="Folder" Foreground="Orange" Margin="0,0,5,0"/>
-                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
+                            <materialDesign:PackIcon Kind="FolderPlusOutline" Width="18" Height="18"
+                                                     VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="New Collection" VerticalAlignment="Center"/>
                         </StackPanel>
-                        
-                        <HierarchicalDataTemplate.ItemTemplate>
-                            <DataTemplate DataType="{x:Type models:SavedRequest}">
-                                <StackPanel Orientation="Horizontal" Background="Transparent"> <StackPanel.ContextMenu>
-                                        <ContextMenu>
-                                            <MenuItem Header="Delete Request" 
-                                                      Command="{Binding Data.DeleteRequestCommand, Source={StaticResource Proxy}}"
-                                                      CommandParameter="{Binding}">
-                                                <MenuItem.Icon>
-                                                    <materialDesign:PackIcon Kind="Delete" Foreground="Red" />
-                                                </MenuItem.Icon>
-                                            </MenuItem>
-                                        </ContextMenu>
-                                    </StackPanel.ContextMenu>
+                    </Button>
 
-                                    <TextBlock Text="{Binding Method}" 
-                                               FontSize="10" 
-                                               FontWeight="Bold" 
-                                               VerticalAlignment="Center" 
-                                               Margin="0,0,8,0"
-                                               Foreground="{Binding Method, Converter={StaticResource MethodToColorConverter}}"/>
-                                    <TextBlock Text="{Binding Name}" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </DataTemplate>
-                        </HierarchicalDataTemplate.ItemTemplate>
-                    </HierarchicalDataTemplate>
-                </TreeView.ItemTemplate>
-            </TreeView>
-        </Grid>
-        
-        <GridSplitter Grid.Column="1" Width="4" HorizontalAlignment="Center" VerticalAlignment="Stretch" Background="Transparent"/>
-        
+                    <Button Command="{Binding SaveRequestCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            HorizontalContentAlignment="Center"
+                            ToolTip="Save current request to selected collection"
+                            IsEnabled="{Binding IsLoggedIn}"
+                            Height="36" Margin="0,0,0,6">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ContentSaveOutline" Width="18" Height="18"
+                                                     VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="Save Current" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Grid Margin="0,0,0,6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="6"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0"
+                                Command="{Binding ExportCollectionsCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                HorizontalContentAlignment="Center"
+                                IsEnabled="{Binding IsLoggedIn}"
+                                Height="34" Padding="0">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="FileExportOutline" Width="16" Height="16"
+                                                         VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBlock Text="Export" VerticalAlignment="Center" FontSize="12"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Grid.Column="2"
+                                Command="{Binding ImportCollectionsCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                HorizontalContentAlignment="Center"
+                                IsEnabled="{Binding IsLoggedIn}"
+                                Height="34" Padding="0">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="FileImportOutline" Width="16" Height="16"
+                                                         VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBlock Text="Import" VerticalAlignment="Center" FontSize="12"/>
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                </StackPanel>
+
+                <!-- Search -->
+                <Border Grid.Row="2" Margin="12,0,12,8">
+                    <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource CleanInput}"
+                             materialDesign:HintAssist.Hint="Search requests..."
+                             materialDesign:TextFieldAssist.HasClearButton="True"/>
+                </Border>
+
+                <!-- Tree -->
+                <TreeView Grid.Row="3"
+                          ItemsSource="{Binding FilteredCollections}"
+                          SelectedItemChanged="TreeView_SelectedItemChanged"
+                          BorderThickness="0,1,0,0"
+                          BorderBrush="{DynamicResource MaterialDesign.Brush.ForegroundLight}"
+                          Padding="4">
+                    <TreeView.ItemContainerStyle>
+                        <Style TargetType="TreeViewItem" BasedOn="{StaticResource {x:Type TreeViewItem}}">
+                            <Setter Property="Padding" Value="6,3"/>
+                            <Setter Property="IsExpanded" Value="True"/>
+                        </Style>
+                    </TreeView.ItemContainerStyle>
+                    <TreeView.ItemTemplate>
+                        <HierarchicalDataTemplate ItemsSource="{Binding Requests}"
+                                                  DataType="{x:Type models:RequestCollection}">
+                            <StackPanel Orientation="Horizontal" Margin="0,2"
+                                        Background="Transparent">
+                                <StackPanel.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Header="Rename Collection"
+                                                  Command="{Binding Data.RenameCollectionCommand, Source={StaticResource Proxy}}"
+                                                  CommandParameter="{Binding}">
+                                            <MenuItem.Icon>
+                                                <materialDesign:PackIcon Kind="RenameOutline"/>
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem Header="Delete Collection"
+                                                  Command="{Binding Data.DeleteCollectionCommand, Source={StaticResource Proxy}}"
+                                                  CommandParameter="{Binding}">
+                                            <MenuItem.Icon>
+                                                <materialDesign:PackIcon Kind="DeleteOutline" Foreground="#C62828"/>
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                    </ContextMenu>
+                                </StackPanel.ContextMenu>
+                                <materialDesign:PackIcon Kind="FolderOutline"
+                                                         Foreground="{DynamicResource SecondaryHueMidBrush}"
+                                                         Width="18" Height="18"
+                                                         VerticalAlignment="Center"
+                                                         Margin="0,0,8,0"/>
+                                <TextBlock Text="{Binding Name}"
+                                           FontWeight="SemiBold"
+                                           FontSize="13"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <HierarchicalDataTemplate.ItemTemplate>
+                                <DataTemplate DataType="{x:Type models:SavedRequest}">
+                                    <StackPanel Orientation="Horizontal"
+                                                Background="Transparent"
+                                                Margin="0,1">
+                                        <StackPanel.ContextMenu>
+                                            <ContextMenu>
+                                                <MenuItem Header="Delete Request"
+                                                          Command="{Binding Data.DeleteRequestCommand, Source={StaticResource Proxy}}"
+                                                          CommandParameter="{Binding}">
+                                                    <MenuItem.Icon>
+                                                        <materialDesign:PackIcon Kind="DeleteOutline" Foreground="#C62828"/>
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
+                                            </ContextMenu>
+                                        </StackPanel.ContextMenu>
+                                        <Border Background="{Binding Method, Converter={StaticResource MethodToColorConverter}}"
+                                                CornerRadius="3"
+                                                Padding="6,1"
+                                                MinWidth="42"
+                                                Margin="0,0,8,0">
+                                            <TextBlock Text="{Binding Method}"
+                                                       FontSize="10"
+                                                       FontWeight="Bold"
+                                                       Foreground="White"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center"/>
+                                        </Border>
+                                        <TextBlock Text="{Binding Name}"
+                                                   VerticalAlignment="Center"
+                                                   FontSize="12.5"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </HierarchicalDataTemplate.ItemTemplate>
+                        </HierarchicalDataTemplate>
+                    </TreeView.ItemTemplate>
+                </TreeView>
+            </Grid>
+        </Border>
+
+        <!-- Splitter -->
+        <GridSplitter Grid.Column="1" Width="4"
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Stretch"
+                      Background="Transparent"/>
+
+        <!-- ══════════════════════════════════════════════════════ -->
+        <!-- MAIN WORK AREA -->
+        <!-- ══════════════════════════════════════════════════════ -->
         <Grid Grid.Column="2">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/> 
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
-            
-            <!-- Строка 0: URL + метод + кнопка Send -->
-            <DockPanel Grid.Row="0" Margin="10" LastChildFill="True">
-                <ComboBox ItemsSource="{Binding Methods }"
-                          SelectedItem="{Binding SelectedMethod}"
-                          Width="100" 
-                          DockPanel.Dock="Left"/>
-                
-                <Button Content="Send" 
-                        Command="{Binding SendCommand}"
-                        Width="80" Margin="5,0,0,0" 
-                        DockPanel.Dock="Right" />
-                
-                <ComboBox ItemsSource="{Binding Environments}"
-                          SelectedItem="{Binding SelectedEnvironment}"
-                          DisplayMemberPath="Name"
-                          Width="150"
-                          DockPanel.Dock="Right"
-                          Margin="5,0"
-                          materialDesign:HintAssist.Hint="No Environment"
-                          materialDesign:TextFieldAssist.HasClearButton="True"/>
-                
-                <Button DockPanel.Dock="Right"
-                        Command="{Binding ToggleThemeCommand}"
-                        Style="{StaticResource MaterialDesignIconButton}"
-                        ToolTip="Toggle theme"
-                        Margin="5,0">
-                    <materialDesign:PackIcon Kind="ThemeLightDark"/>
-                </Button>
-                
-                <!-- Auth-блок -->
-                <StackPanel Orientation="Horizontal"
-                            DockPanel.Dock="Right"
-                            Margin="5,0,0,0">
 
-                    <!-- Залогинен: имя + Logout -->
-                    <StackPanel Orientation="Horizontal"
-                                Visibility="{Binding IsLoggedIn, Converter={StaticResource BooleanToVisibilityConverter}}">
-                        <materialDesign:PackIcon Kind="Account" 
-                                                 VerticalAlignment="Center" 
-                                                 Margin="0,0,4,0"/>
-                        <TextBlock Text="{Binding CurrentUsername}"
-                                   Margin="0,0,8,0"
-                                   VerticalAlignment="Center"
-                                   FontWeight="SemiBold"/>
-                        <Button Content="Logout"
-                                Command="{Binding LogoutCommand}"
-                                Style="{StaticResource MaterialDesignFlatButton}"
-                                Padding="8,4"/>
+            <!-- Row 0: Toolbar — auth, env, theme -->
+            <Border Grid.Row="0"
+                    Background="{DynamicResource MaterialDesign.Brush.Card.Background}"
+                    BorderBrush="{DynamicResource MaterialDesign.Brush.ForegroundLight}"
+                    BorderThickness="0,0,0,1"
+                    Padding="12,6">
+                <DockPanel>
+                    <!-- Right side: env + theme -->
+                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Right"
+                                VerticalAlignment="Center">
+                        <ComboBox ItemsSource="{Binding Environments}"
+                                  SelectedItem="{Binding SelectedEnvironment}"
+                                  DisplayMemberPath="Name"
+                                  Width="160"
+                                  Style="{StaticResource CleanComboBox}"
+                                  materialDesign:HintAssist.Hint="No Environment"
+                                  materialDesign:TextFieldAssist.HasClearButton="True"
+                                  Margin="0,0,8,0"/>
+                        <Button Command="{Binding ToggleThemeCommand}"
+                                Style="{StaticResource MaterialDesignIconButton}"
+                                ToolTip="Toggle theme"
+                                Width="36" Height="36">
+                            <materialDesign:PackIcon Kind="ThemeLightDark" Width="20" Height="20"/>
+                        </Button>
                     </StackPanel>
 
-                    <!-- НЕ залогинен: поля + Login/Register + ошибка -->
+                    <!-- Left side: auth -->
+                    <!-- Logged in -->
+                    <StackPanel Orientation="Horizontal"
+                                VerticalAlignment="Center"
+                                Visibility="{Binding IsLoggedIn, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <materialDesign:PackIcon Kind="AccountCircle"
+                                                 Width="22" Height="22"
+                                                 VerticalAlignment="Center"
+                                                 Foreground="{DynamicResource PrimaryHueMidBrush}"
+                                                 Margin="0,0,6,0"/>
+                        <TextBlock Text="{Binding CurrentUsername}"
+                                   VerticalAlignment="Center"
+                                   FontWeight="SemiBold"
+                                   FontSize="13"
+                                   Margin="0,0,12,0"/>
+                        <Button Command="{Binding LogoutCommand}"
+                                Style="{StaticResource MaterialDesignFlatButton}"
+                                Padding="10,4" Height="32">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Logout" Width="16" Height="16"
+                                                         VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBlock Text="Logout" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+
+                    <!-- Not logged in -->
                     <StackPanel Orientation="Vertical"
+                                VerticalAlignment="Center"
                                 Visibility="{Binding IsLoggedIn, Converter={StaticResource InverseBoolToVisibilityConverter}}">
                         <StackPanel Orientation="Horizontal">
-                            <TextBox Width="120"
+                            <TextBox Width="140"
                                      Text="{Binding LoginUserName, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource CleanInput}"
                                      materialDesign:HintAssist.Hint="Username"
-                                     Margin="0,0,5,0"
-                                     VerticalAlignment="Center"/>
-                            <TextBox Width="120"
+                                     VerticalAlignment="Center"
+                                     Margin="0,0,8,0"/>
+                            <TextBox Width="140"
                                      Text="{Binding LoginPassword, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource CleanInput}"
                                      materialDesign:HintAssist.Hint="Password"
-                                     Margin="0,0,5,0"
-                                     VerticalAlignment="Center"/>
-                            <Button Content="Login"
-                                    Command="{Binding LoginCommand}"
-                                    Style="{StaticResource MaterialDesignFlatButton}"
-                                    Margin="0,0,3,0"
-                                    Padding="8,4"/>
-                            <Button Content="Register"
-                                    Command="{Binding RegisterCommand}"
-                                    Style="{StaticResource MaterialDesignFlatButton}"
-                                    Padding="8,4"/>
+                                     VerticalAlignment="Center"
+                                     Margin="0,0,8,0"/>
+                            <Button Command="{Binding LoginCommand}"
+                                    Style="{StaticResource MaterialDesignFlatMidBgButton}"
+                                    Height="32" Padding="12,0"
+                                    Margin="0,0,4,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Login" Width="16" Height="16"
+                                                             VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Login" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Command="{Binding RegisterCommand}"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    Height="32" Padding="12,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="AccountPlusOutline" Width="16" Height="16"
+                                                             VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Register" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
                         </StackPanel>
                         <TextBlock Text="{Binding AuthErrorMessage}"
-                                   Foreground="Red"
+                                   Foreground="#D32F2F"
                                    FontSize="11"
-                                   Margin="0,2,0,0"/>
+                                   Margin="0,3,0,0"/>
                     </StackPanel>
-                </StackPanel>
+                </DockPanel>
+            </Border>
 
-    <!-- Уже существующий TextBox с URL -->
-    <TextBox Text="{Binding Url, UpdateSourceTrigger=PropertyChanged}"
-             Margin="5,0"
-             VerticalAlignment="Center"
-             materialDesign:HintAssist.Hint="Enter request URL (e.g. https://api.example.com)" 
-             materialDesign:TextFieldAssist.HasClearButton="True"/>
-            </DockPanel>
-            
-            <!-- Строка 1: ProgressBar -->
-            
-            <ProgressBar Grid.Row="1"
+            <!-- Row 1: URL bar (Postman-style integrated) -->
+            <Border Grid.Row="1" Margin="12,10,12,0"
+                    BorderBrush="{DynamicResource MaterialDesign.Brush.ForegroundLight}"
+                    BorderThickness="1.5" CornerRadius="8"
+                    Padding="3"
+                    Background="{DynamicResource MaterialDesign.Brush.Card.Background}">
+                <DockPanel>
+                    <ComboBox ItemsSource="{Binding Methods}"
+                              SelectedItem="{Binding SelectedMethod}"
+                              Width="105"
+                              DockPanel.Dock="Left"
+                              FontWeight="Bold" FontSize="14"
+                              BorderThickness="0"
+                              Padding="10,8"
+                              materialDesign:TextFieldAssist.DecorationVisibility="Hidden">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" FontWeight="Bold"
+                                           Foreground="{Binding Converter={StaticResource MethodToColorConverter}}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <Rectangle DockPanel.Dock="Left" Width="1" Fill="{DynamicResource MaterialDesign.Brush.ForegroundLight}"
+                               Margin="0,6"/>
+
+                    <Button Command="{Binding SendCommand}"
+                            DockPanel.Dock="Right"
+                            Margin="4,0,1,0" Padding="20,7"
+                            FontWeight="Bold"
+                            materialDesign:ButtonAssist.CornerRadius="6">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Send" Width="18" Height="18"
+                                                     VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="Send" VerticalAlignment="Center" FontSize="14"/>
+                        </StackPanel>
+                    </Button>
+
+                    <TextBox Text="{Binding Url, UpdateSourceTrigger=PropertyChanged}"
+                             VerticalAlignment="Center"
+                             FontSize="14" FontWeight="Medium" FontFamily="Segoe UI"
+                             Padding="12,8"
+                             BorderThickness="0"
+                             materialDesign:TextFieldAssist.DecorationVisibility="Hidden"
+                             materialDesign:HintAssist.IsFloating="False"
+                             materialDesign:HintAssist.Hint="Enter request URL..."
+                             materialDesign:TextFieldAssist.HasClearButton="True"/>
+                </DockPanel>
+            </Border>
+
+            <!-- Row 2: ProgressBar -->
+            <ProgressBar Grid.Row="2"
                          IsIndeterminate="True"
-                         Height="4"
-                         Visibility="{Binding IsLoading, 
+                         Height="3"
+                         Margin="12,0"
+                         Visibility="{Binding IsLoading,
                               Converter={StaticResource BooleanToVisibilityConverter}}"/>
-            
-            <!-- Строка 2: Вкладки Headers и Body -->
-            <TabControl Grid.Row="2" Margin="10,0,10,5" MinHeight="150" MaxHeight="250">
-                <TabItem Header="Headers">
-                    <DockPanel>
-                        <Button Content="+ Add Header"
-                                Command="{Binding AddHeaderCommand}"
+
+            <!-- ═══════════════════════════════════════════════ -->
+            <!-- Row 3: Request config tabs -->
+            <!-- ═══════════════════════════════════════════════ -->
+            <TabControl Grid.Row="3" Margin="12,6,12,4"
+                        MinHeight="160" MaxHeight="260">
+
+                <!-- Headers -->
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="CodeBraces" Width="16" Height="16"
+                                                     VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Headers" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <DockPanel Margin="4">
+                        <Button Command="{Binding AddHeaderCommand}"
                                 DockPanel.Dock="Bottom"
                                 HorizontalAlignment="Left"
-                                Margin="0,5,0,0"/>
-                        
+                                Style="{StaticResource MaterialDesignFlatButton}"
+                                Margin="0,4,0,0">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Plus" Width="16" Height="16"
+                                                         VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBlock Text="Add Header" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
                         <DataGrid ItemsSource="{Binding Headers}"
-                                  AutoGenerateColumns="False"
-                                  CanUserAddRows="False"
-                                  CanUserDeleteRows="False"
-                                  HeadersVisibility="Column">
+                                  Style="{StaticResource CleanDataGrid}">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="Key"
-                                                    Binding="{Binding Key}"
-                                                    Width="*"/>
-                                
-                                <DataGridTextColumn Header="Value"
-                                                    Binding="{Binding Value}"
-                                                    Width="2*"/>
-                                
-                                <DataGridTemplateColumn Header="" Width="50">
+                                <DataGridTemplateColumn Header="Key" Width="*">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Button Content="✕"
-                                                    Command="{Binding DataContext.RemoveHeaderCommand, 
-                                                    RelativeSource={RelativeSource AncestorType=Window}}"
-                                                    CommandParameter="{Binding}"
-                                                    Padding="4,2"
-                                                    MinWidth="0" MinHeight="0"
-                                                    Style="{StaticResource MaterialDesignFlatButton}"
-                                                    Foreground="Gray"
-                                                    FontSize="12"/>
+                                            <TextBox Text="{Binding Key, UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{StaticResource DataGridCellTextBox}"
+                                                     materialDesign:HintAssist.Hint="Key"/>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
-                                
+                                <DataGridTemplateColumn Header="Value" Width="2*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{StaticResource DataGridCellTextBox}"
+                                                     materialDesign:HintAssist.Hint="Value"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="" Width="40">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Command="{Binding DataContext.RemoveHeaderCommand,
+                                                    RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource MaterialDesignIconButton}"
+                                                    Width="28" Height="28"
+                                                    Foreground="#C62828" ToolTip="Remove">
+                                                <materialDesign:PackIcon Kind="CloseCircleOutline" Width="16" Height="16"/>
+                                            </Button>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
                             </DataGrid.Columns>
                         </DataGrid>
                     </DockPanel>
                 </TabItem>
-                
-                <!-- Вкладка Body -->
-                <TabItem Header="Body">
-                    <Grid>
+
+                <!-- Body -->
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="FileDocumentOutline" Width="16" Height="16"
+                                                     VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Body" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <Grid Margin="4">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
-
                         <ComboBox Grid.Row="0"
                                   ItemsSource="{Binding BodyTypes}"
                                   SelectedItem="{Binding SelectedBodyType}"
-                                  Width="160"
-                                  HorizontalAlignment="Left"
-                                  Margin="0,5,0,5"/>
-
-                        <!-- JSON / Raw: текстовое поле -->
+                                  Style="{StaticResource CleanComboBox}"
+                                  Width="170" HorizontalAlignment="Left"
+                                  Margin="0,4,0,6"/>
                         <TextBox Grid.Row="1"
                                  Text="{Binding RequestBody, UpdateSourceTrigger=PropertyChanged}"
-                                 AcceptsReturn="True"
-                                 TextWrapping="Wrap"
+                                 Style="{StaticResource CleanInput}"
+                                 AcceptsReturn="True" TextWrapping="Wrap"
                                  VerticalScrollBarVisibility="Auto"
                                  FontFamily="Consolas"
-                                 Padding="5"
+                                 materialDesign:HintAssist.Hint="Request body..."
                                  Visibility="{Binding SelectedBodyType, Converter={StaticResource StringMatchToVisibilityConverter}, ConverterParameter=json|raw}"/>
-
-                        <!-- Form-data: таблица Key/Value -->
                         <DockPanel Grid.Row="1"
                                    Visibility="{Binding SelectedBodyType, Converter={StaticResource StringMatchToVisibilityConverter}, ConverterParameter=form-data}">
-                            <Button Content="+ Add Field"
-                                    Command="{Binding AddFormDataItemCommand}"
-                                    DockPanel.Dock="Bottom"
-                                    HorizontalAlignment="Left"
-                                    Margin="0,5,0,0"/>
+                            <Button Command="{Binding AddFormDataItemCommand}"
+                                    DockPanel.Dock="Bottom" HorizontalAlignment="Left"
+                                    Style="{StaticResource MaterialDesignFlatButton}"
+                                    Margin="0,4,0,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Plus" Width="16" Height="16"
+                                                             VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Add Field" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
                             <DataGrid ItemsSource="{Binding FormDataItems}"
-                                      AutoGenerateColumns="False"
-                                      CanUserAddRows="False"
-                                      CanUserDeleteRows="False"
-                                      HeadersVisibility="Column">
+                                      Style="{StaticResource CleanDataGrid}">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Key" Binding="{Binding Key}" Width="*"/>
-                                    <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="2*"/>
-                                    <DataGridTemplateColumn Header="" Width="50">
+                                    <DataGridTemplateColumn Header="Key" Width="*">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <Button Content="✕"
-                                                        Command="{Binding DataContext.RemoveFormDataItemCommand,
+                                                <TextBox Text="{Binding Key, UpdateSourceTrigger=PropertyChanged}"
+                                                         Style="{StaticResource DataGridCellTextBox}"
+                                                         materialDesign:HintAssist.Hint="Key"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="Value" Width="2*">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}"
+                                                         Style="{StaticResource DataGridCellTextBox}"
+                                                         materialDesign:HintAssist.Hint="Value"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="" Width="40">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Button Command="{Binding DataContext.RemoveFormDataItemCommand,
                                                         RelativeSource={RelativeSource AncestorType=Window}}"
                                                         CommandParameter="{Binding}"
-                                                        Padding="4,2"
-                                                        MinWidth="0" MinHeight="0"
-                                                        Style="{StaticResource MaterialDesignFlatButton}"
-                                                        Foreground="Gray"
-                                                        FontSize="12"/>
+                                                        Style="{StaticResource MaterialDesignIconButton}"
+                                                        Width="28" Height="28"
+                                                        Foreground="#C62828" ToolTip="Remove">
+                                                    <materialDesign:PackIcon Kind="CloseCircleOutline" Width="16" Height="16"/>
+                                                </Button>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
                                 </DataGrid.Columns>
                             </DataGrid>
                         </DockPanel>
-
-                        <!-- None: подсказка -->
                         <TextBlock Grid.Row="1"
                                    Text="No body for this request"
-                                   Foreground="Gray"
-                                   VerticalAlignment="Center"
-                                   HorizontalAlignment="Center"
+                                   Foreground="Gray" FontStyle="Italic"
+                                   VerticalAlignment="Center" HorizontalAlignment="Center"
                                    Visibility="{Binding SelectedBodyType, Converter={StaticResource StringMatchToVisibilityConverter}, ConverterParameter=none}"/>
                     </Grid>
                 </TabItem>
-                
-                <TabItem Header="Params">
-                    <DockPanel>
-                        <Button Content="+ Add Param"
-                                Command="{Binding AddQueryParamCommand}"
-                                DockPanel.Dock="Bottom"
-                                HorizontalAlignment="Left"
-                                Margin="0,5,0,0"/>
 
+                <!-- Params -->
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="TuneVariant" Width="16" Height="16"
+                                                     VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Params" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <DockPanel Margin="4">
+                        <Button Command="{Binding AddQueryParamCommand}"
+                                DockPanel.Dock="Bottom" HorizontalAlignment="Left"
+                                Style="{StaticResource MaterialDesignFlatButton}"
+                                Margin="0,4,0,0">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Plus" Width="16" Height="16"
+                                                         VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBlock Text="Add Param" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
                         <DataGrid ItemsSource="{Binding QueryParams}"
-                                  AutoGenerateColumns="False"
-                                  CanUserAddRows="False"
-                                  CanUserDeleteRows="False"
-                                  HeadersVisibility="Column">
+                                  Style="{StaticResource CleanDataGrid}">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="Key"
-                                                    Binding="{Binding Key}"
-                                                    Width="*"/>
-                                <DataGridTextColumn Header="Value"
-                                                    Binding="{Binding Value}"
-                                                    Width="2*"/>
-                                <DataGridTemplateColumn Header="" Width="50">
+                                <DataGridTemplateColumn Header="Key" Width="*">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Button Content="✕"
-                                                    Command="{Binding DataContext.RemoveQueryParamCommand,
-                                    RelativeSource={RelativeSource AncestorType=Window}}"
+                                            <TextBox Text="{Binding Key, UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{StaticResource DataGridCellTextBox}"
+                                                     materialDesign:HintAssist.Hint="Key"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="Value" Width="2*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{StaticResource DataGridCellTextBox}"
+                                                     materialDesign:HintAssist.Hint="Value"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="" Width="40">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Command="{Binding DataContext.RemoveQueryParamCommand,
+                                                    RelativeSource={RelativeSource AncestorType=Window}}"
                                                     CommandParameter="{Binding}"
-                                                    Padding="4,2"
-                                                    MinWidth="0" MinHeight="0"
-                                                    Style="{StaticResource MaterialDesignFlatButton}"
-                                                    Foreground="Gray"
-                                                    FontSize="12"/>
+                                                    Style="{StaticResource MaterialDesignIconButton}"
+                                                    Width="28" Height="28"
+                                                    Foreground="#C62828" ToolTip="Remove">
+                                                <materialDesign:PackIcon Kind="CloseCircleOutline" Width="16" Height="16"/>
+                                            </Button>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
@@ -377,286 +662,395 @@
                         </DataGrid>
                     </DockPanel>
                 </TabItem>
-                
-                <TabItem Header="Environments">
-                    <Grid>
+
+                <!-- Environments -->
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Earth" Width="16" Height="16"
+                                                     VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Environments" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <Grid Margin="4">
                         <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
-
-                        <StackPanel Orientation="Horizontal" Margin="0,5">
-                            <Button Content="New Environment" 
-                                    Command="{Binding CreateEnvironmentCommand}"
+                        <StackPanel Orientation="Horizontal" Margin="0,4,0,4">
+                            <Button Command="{Binding CreateEnvironmentCommand}"
                                     Style="{StaticResource MaterialDesignFlatButton}"
-                                    FontSize="12"/>
-                            <Button Content="Delete Current Env" 
-                                    Command="{Binding DeleteEnvironmentCommand}"
+                                    Padding="10,4" Height="32">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Plus" Width="16" Height="16"
+                                                             VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Text="New Environment" VerticalAlignment="Center" FontSize="12"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Command="{Binding DeleteEnvironmentCommand}"
                                     CommandParameter="{Binding SelectedEnvironment}"
-                                    Foreground="Red"
                                     Style="{StaticResource MaterialDesignFlatButton}"
-                                    FontSize="12"
-                                    Margin="10,0,0,0"/>
+                                    Foreground="#C62828"
+                                    Padding="10,4" Height="32"
+                                    Margin="8,0,0,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="DeleteOutline" Width="16" Height="16"
+                                                             VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Delete" VerticalAlignment="Center" FontSize="12"/>
+                                </StackPanel>
+                            </Button>
                         </StackPanel>
-
-                        <DataGrid Grid.Row="1" 
+                        <TextBlock Grid.Row="1"
+                                   Visibility="{Binding SelectedEnvironment, Converter={StaticResource NullToCollapsedConverter}}"
+                                   TextWrapping="Wrap" LineHeight="20"
+                                   Foreground="Gray" FontStyle="Italic" FontSize="12"
+                                   Margin="4,4,0,8">
+                            <Run Text="1. Click &quot;New Environment&quot; to create one"/>
+                            <LineBreak/>
+                            <Run Text="2. Select it in the toolbar dropdown (top-right)"/>
+                            <LineBreak/>
+                            <Run Text="3. Add variables, then use {{name}} in URL or headers"/>
+                        </TextBlock>
+                        <DataGrid Grid.Row="2"
                                   ItemsSource="{Binding SelectedEnvironment.Variables}"
-                                  AutoGenerateColumns="False"
-                                  CanUserAddRows="False"
-                                  HeadersVisibility="Column"
-                                  Margin="0,5">
+                                  Style="{StaticResource CleanDataGrid}"
+                                  Margin="0,4">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="Variable (Key)" Binding="{Binding Key}" Width="*"/>
-                                <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="2*"/>
-                                <DataGridTemplateColumn Width="50">
+                                <DataGridTemplateColumn Header="Variable (Key)" Width="*">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Button Content="✕"
-                                                    Command="{Binding DataContext.RemoveVariableCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            <TextBox Text="{Binding Key, UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{StaticResource DataGridCellTextBox}"
+                                                     materialDesign:HintAssist.Hint="variable_name"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="Value" Width="2*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{StaticResource DataGridCellTextBox}"
+                                                     materialDesign:HintAssist.Hint="Value"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Width="40">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Command="{Binding DataContext.RemoveVariableCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                     CommandParameter="{Binding}"
-                                                    Style="{StaticResource MaterialDesignFlatButton}"
-                                                    Foreground="Gray" FontSize="12"/>
+                                                    Style="{StaticResource MaterialDesignIconButton}"
+                                                    Width="28" Height="28"
+                                                    Foreground="#C62828" ToolTip="Remove">
+                                                <materialDesign:PackIcon Kind="CloseCircleOutline" Width="16" Height="16"/>
+                                            </Button>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
                             </DataGrid.Columns>
                         </DataGrid>
-
-                        <Button Grid.Row="2" 
-                                Content="+ Add Variable"
+                        <Button Grid.Row="3"
                                 Command="{Binding AddVariableCommand}"
                                 HorizontalAlignment="Left"
-                                Margin="0,5,0,0"
-                                IsEnabled="{Binding SelectedEnvironment, Converter={StaticResource SelectedToEnabledConverter}}"/> 
-                                </Grid>
+                                Style="{StaticResource MaterialDesignFlatButton}"
+                                Margin="0,4,0,0"
+                                IsEnabled="{Binding SelectedEnvironment, Converter={StaticResource SelectedToEnabledConverter}}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Plus" Width="16" Height="16"
+                                                         VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBlock Text="Add Variable" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </Grid>
                 </TabItem>
-                
-                <TabItem Header="Auth">
-    <StackPanel Margin="8">
-        <ComboBox ItemsSource="{Binding AuthTypes}"
-                  SelectedItem="{Binding SelectedAuthType}"
-                  Width="200"
-                  HorizontalAlignment="Left"
-                  Margin="0,5,0,10"
-                  materialDesign:HintAssist.Hint="Auth Type"/>
 
-        <!-- Bearer Token -->
-        <StackPanel Visibility="{Binding SelectedAuthType,
-                    Converter={StaticResource StringMatchToVisibilityConverter},
-                    ConverterParameter=Bearer Token}">
-            <TextBlock Text="Token" FontWeight="SemiBold" Margin="0,0,0,4"/>
-            <TextBox Text="{Binding BearerToken, UpdateSourceTrigger=PropertyChanged}"
-                     materialDesign:HintAssist.Hint="Enter bearer token"
-                     Margin="0,0,0,8"/>
-        </StackPanel>
+                <!-- Auth -->
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ShieldKeyOutline" Width="16" Height="16"
+                                                     VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Auth" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <StackPanel Margin="8">
+                        <ComboBox ItemsSource="{Binding AuthTypes}"
+                                  SelectedItem="{Binding SelectedAuthType}"
+                                  Width="220" HorizontalAlignment="Left"
+                                  Style="{StaticResource CleanComboBox}"
+                                  materialDesign:HintAssist.Hint="Auth Type"
+                                  Margin="0,4,0,12"/>
+                        <StackPanel Visibility="{Binding SelectedAuthType,
+                                    Converter={StaticResource StringMatchToVisibilityConverter},
+                                    ConverterParameter=Bearer Token}">
+                            <TextBox Text="{Binding BearerToken, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource CleanInput}"
+                                     materialDesign:HintAssist.Hint="Bearer token" Margin="0,0,0,10"/>
+                        </StackPanel>
+                        <StackPanel Visibility="{Binding SelectedAuthType,
+                                    Converter={StaticResource StringMatchToVisibilityConverter},
+                                    ConverterParameter=Basic Auth}">
+                            <TextBox Text="{Binding BasicAuthUsername, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource CleanInput}"
+                                     materialDesign:HintAssist.Hint="Username" Margin="0,0,0,10"/>
+                            <TextBox Text="{Binding BasicAuthPassword, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource CleanInput}"
+                                     materialDesign:HintAssist.Hint="Password" Margin="0,0,0,10"/>
+                        </StackPanel>
+                        <StackPanel Visibility="{Binding SelectedAuthType,
+                                    Converter={StaticResource StringMatchToVisibilityConverter},
+                                    ConverterParameter=API Key}">
+                            <TextBox Text="{Binding ApiKeyName, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource CleanInput}"
+                                     materialDesign:HintAssist.Hint="Header name (e.g. X-API-Key)" Margin="0,0,0,10"/>
+                            <TextBox Text="{Binding ApiKeyValue, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource CleanInput}"
+                                     materialDesign:HintAssist.Hint="API key value" Margin="0,0,0,10"/>
+                        </StackPanel>
+                        <TextBlock Text="No authorization"
+                                   Foreground="Gray" FontStyle="Italic" Margin="0,8,0,0"
+                                   Visibility="{Binding SelectedAuthType,
+                                   Converter={StaticResource StringMatchToVisibilityConverter},
+                                   ConverterParameter=None}"/>
+                    </StackPanel>
+                </TabItem>
 
-        <!-- Basic Auth -->
-        <StackPanel Visibility="{Binding SelectedAuthType,
-                    Converter={StaticResource StringMatchToVisibilityConverter},
-                    ConverterParameter=Basic Auth}">
-            <TextBlock Text="Username" FontWeight="SemiBold" Margin="0,0,0,4"/>
-            <TextBox Text="{Binding BasicAuthUsername, UpdateSourceTrigger=PropertyChanged}"
-                     materialDesign:HintAssist.Hint="Username"
-                     Margin="0,0,0,8"/>
-            <TextBlock Text="Password" FontWeight="SemiBold" Margin="0,0,0,4"/>
-            <TextBox Text="{Binding BasicAuthPassword, UpdateSourceTrigger=PropertyChanged}"
-                     materialDesign:HintAssist.Hint="Password"
-                     Margin="0,0,0,8"/>
-        </StackPanel>
+                <!-- Tests -->
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="FlaskOutline" Width="16" Height="16"
+                                                     VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Tests" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <DockPanel Margin="4">
+                        <Button Command="{Binding AddTestCommand}"
+                                DockPanel.Dock="Bottom" HorizontalAlignment="Left"
+                                Style="{StaticResource MaterialDesignFlatButton}"
+                                Margin="0,4,0,0">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Plus" Width="16" Height="16"
+                                                         VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBlock Text="Add Test" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <DataGrid ItemsSource="{Binding Tests}"
+                                  Style="{StaticResource CleanDataGrid}">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Header="Type" Width="*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <ComboBox ItemsSource="{Binding DataContext.TestTypes, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                      SelectedItem="{Binding TestType, UpdateSourceTrigger=PropertyChanged}"
+                                                      BorderThickness="0" Background="Transparent"
+                                                      Padding="8,0" FontSize="13" FontWeight="Medium"
+                                                      VerticalAlignment="Stretch"
+                                                      VerticalContentAlignment="Center"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="Expected Value" Width="*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBox Text="{Binding ExpectedValue, UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{StaticResource DataGridCellTextBox}"
+                                                     materialDesign:HintAssist.Hint="200"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="" Width="40">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Command="{Binding DataContext.RemoveTestCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource MaterialDesignIconButton}"
+                                                    Width="28" Height="28"
+                                                    Foreground="#C62828" ToolTip="Remove">
+                                                <materialDesign:PackIcon Kind="CloseCircleOutline" Width="16" Height="16"/>
+                                            </Button>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </TabItem>
 
-        <!-- API Key -->
-        <StackPanel Visibility="{Binding SelectedAuthType,
-                    Converter={StaticResource StringMatchToVisibilityConverter},
-                    ConverterParameter=API Key}">
-            <TextBlock Text="Key Name" FontWeight="SemiBold" Margin="0,0,0,4"/>
-            <TextBox Text="{Binding ApiKeyName, UpdateSourceTrigger=PropertyChanged}"
-                     materialDesign:HintAssist.Hint="Header name (e.g. X-API-Key)"
-                     Margin="0,0,0,8"/>
-            <TextBlock Text="Key Value" FontWeight="SemiBold" Margin="0,0,0,4"/>
-            <TextBox Text="{Binding ApiKeyValue, UpdateSourceTrigger=PropertyChanged}"
-                     materialDesign:HintAssist.Hint="API key value"
-                     Margin="0,0,0,8"/>
-        </StackPanel>
-
-        <!-- None -->
-        <TextBlock Text="No authorization"
-                   Foreground="Gray"
-                   Margin="0,10,0,0"
-                   Visibility="{Binding SelectedAuthType,
-                   Converter={StaticResource StringMatchToVisibilityConverter},
-                   ConverterParameter=None}"/>
-    </StackPanel>
-</TabItem>
-                
-                <TabItem Header="Tests">
-    <DockPanel>
-        <Button Content="+ Add Test"
-                Command="{Binding AddTestCommand}"
-                DockPanel.Dock="Bottom"
-                HorizontalAlignment="Left"
-                Margin="0,5,0,0"/>
-        <DataGrid ItemsSource="{Binding Tests}"
-                  AutoGenerateColumns="False"
-                  CanUserAddRows="False"
-                  CanUserDeleteRows="False"
-                  HeadersVisibility="Column">
-            <DataGrid.Columns>
-                <DataGridComboBoxColumn Header="Type"
-                                        SelectedItemBinding="{Binding TestType}"
-                                        Width="*">
-                    <DataGridComboBoxColumn.ElementStyle>
-                        <Style TargetType="ComboBox">
-                            <Setter Property="ItemsSource" Value="{Binding DataContext.TestTypes, RelativeSource={RelativeSource AncestorType=Window}}"/>
-                        </Style>
-                    </DataGridComboBoxColumn.ElementStyle>
-                    <DataGridComboBoxColumn.EditingElementStyle>
-                        <Style TargetType="ComboBox">
-                            <Setter Property="ItemsSource" Value="{Binding DataContext.TestTypes, RelativeSource={RelativeSource AncestorType=Window}}"/>
-                        </Style>
-                    </DataGridComboBoxColumn.EditingElementStyle>
-                </DataGridComboBoxColumn>
-                <DataGridTextColumn Header="Expected Value"
-                                    Binding="{Binding ExpectedValue}"
-                                    Width="*"/>
-                <DataGridTemplateColumn Header="" Width="50">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Button Content="✕"
-                                    Command="{Binding DataContext.RemoveTestCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                    CommandParameter="{Binding}"
-                                    Padding="4,2"
-                                    MinWidth="0" MinHeight="0"
+                <!-- WebSocket -->
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="SwapHorizontal" Width="16" Height="16"
+                                                     VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="WebSocket" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <Grid Margin="8">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <DockPanel Grid.Row="0" Margin="0,0,0,8">
+                            <Button Command="{Binding WsDisconnectCommand}"
+                                    DockPanel.Dock="Right"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    Margin="6,0,0,0" Padding="12,4" Height="34">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="PowerPlugOffOutline" Width="16" Height="16"
+                                                             VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Disconnect" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Command="{Binding WsConnectCommand}"
+                                    DockPanel.Dock="Right"
+                                    Style="{StaticResource MaterialDesignFlatMidBgButton}"
+                                    Margin="6,0,0,0" Padding="12,4" Height="34">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="PowerPlugOutline" Width="16" Height="16"
+                                                             VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Connect" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <TextBox Text="{Binding WsUrl, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource CleanInput}"
+                                     materialDesign:HintAssist.Hint="wss://echo.websocket.org"
+                                     VerticalAlignment="Center"/>
+                        </DockPanel>
+                        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,6">
+                            <TextBlock Text="Status:" FontWeight="SemiBold"
+                                       VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="{Binding WsStatus}"
+                                       VerticalAlignment="Center" FontFamily="Consolas"/>
+                        </StackPanel>
+                        <ListBox Grid.Row="2"
+                                 ItemsSource="{Binding WsMessages}"
+                                 FontFamily="Consolas" FontSize="12"
+                                 BorderThickness="1"
+                                 BorderBrush="{DynamicResource MaterialDesign.Brush.ForegroundLight}"/>
+                        <DockPanel Grid.Row="3" Margin="0,8,0,0">
+                            <Button Command="{Binding WsClearMessagesCommand}"
+                                    DockPanel.Dock="Right"
                                     Style="{StaticResource MaterialDesignFlatButton}"
-                                    Foreground="Gray"
-                                    FontSize="12"/>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-            </DataGrid.Columns>
-        </DataGrid>
-    </DockPanel>
-</TabItem>
-                
-                <TabItem Header="WebSocket">
-    <Grid Margin="8">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-
-        <!-- URL + Connect/Disconnect -->
-        <DockPanel Grid.Row="0" Margin="0,0,0,8">
-            <Button Content="Disconnect"
-                    Command="{Binding WsDisconnectCommand}"
-                    DockPanel.Dock="Right"
-                    Margin="5,0,0,0"
-                    Style="{StaticResource MaterialDesignOutlinedButton}"
-                    Padding="12,4"/>
-            <Button Content="Connect"
-                    Command="{Binding WsConnectCommand}"
-                    DockPanel.Dock="Right"
-                    Margin="5,0,0,0"
-                    Style="{StaticResource MaterialDesignFlatMidBgButton}"
-                    Padding="12,4"/>
-            <TextBox Text="{Binding WsUrl, UpdateSourceTrigger=PropertyChanged}"
-                     materialDesign:HintAssist.Hint="ws://echo.websocket.org"
-                     VerticalAlignment="Center"/>
-        </DockPanel>
-
-        <!-- Status -->
-        <TextBlock Grid.Row="1" Margin="0,0,0,6">
-            <Run Text="Status: " FontWeight="SemiBold"/>
-            <Run Text="{Binding WsStatus}"/>
-        </TextBlock>
-
-        <!-- Messages -->
-        <ListBox Grid.Row="2"
-                 ItemsSource="{Binding WsMessages}"
-                 FontFamily="Consolas"
-                 FontSize="12"
-                 BorderThickness="1"
-                 BorderBrush="Gray"/>
-
-        <!-- Send -->
-        <DockPanel Grid.Row="3" Margin="0,8,0,0">
-            <Button Content="Clear"
-                    Command="{Binding WsClearMessagesCommand}"
-                    DockPanel.Dock="Right"
-                    Style="{StaticResource MaterialDesignFlatButton}"
-                    Padding="8,4"
-                    Margin="5,0,0,0"/>
-            <Button Content="Send"
-                    Command="{Binding WsSendCommand}"
-                    DockPanel.Dock="Right"
-                    Style="{StaticResource MaterialDesignFlatMidBgButton}"
-                    Padding="12,4"
-                    Margin="5,0,0,0"/>
-            <TextBox Text="{Binding WsMessageToSend, UpdateSourceTrigger=PropertyChanged}"
-                     materialDesign:HintAssist.Hint="Message to send..."
-                     VerticalAlignment="Center"/>
-        </DockPanel>
-    </Grid>
-</TabItem>
-                
-                
-                
+                                    Padding="8,4" Margin="6,0,0,0" Height="34">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="DeleteSweepOutline" Width="16" Height="16"
+                                                             VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Clear" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Command="{Binding WsSendCommand}"
+                                    DockPanel.Dock="Right"
+                                    Style="{StaticResource MaterialDesignFlatMidBgButton}"
+                                    Padding="12,4" Margin="6,0,0,0" Height="34">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Send" Width="16" Height="16"
+                                                             VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Send" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <TextBox Text="{Binding WsMessageToSend, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource CleanInput}"
+                                     materialDesign:HintAssist.Hint="Message to send..."
+                                     VerticalAlignment="Center"/>
+                        </DockPanel>
+                    </Grid>
+                </TabItem>
             </TabControl>
-            
-            <!-- Строка 3: Статус ответа-->
-            <Border Grid.Row="3" 
-                    Background="{Binding StatusInfo, Converter={StaticResource StatusCodeToBrushConverter}}" 
-                    Margin="10,8,10,4" 
-                    CornerRadius="4">
-                <TextBlock Text="{Binding StatusInfo}"
-                           FontWeight="Bold"
-                           Padding="12,6"
-                           Foreground="White"/>
+
+            <!-- ═══════════════════════════════════════════════ -->
+            <!-- Row 4: Status badge -->
+            <!-- ═══════════════════════════════════════════════ -->
+            <Border Grid.Row="4"
+                    Background="{Binding StatusInfo, Converter={StaticResource StatusCodeToBrushConverter}}"
+                    Margin="12,6,12,4"
+                    CornerRadius="6"
+                    Padding="14,7">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="InformationOutline"
+                                             Width="18" Height="18"
+                                             Foreground="White"
+                                             VerticalAlignment="Center"
+                                             Margin="0,0,10,0"/>
+                    <TextBlock Text="{Binding StatusInfo}"
+                               FontWeight="SemiBold"
+                               FontSize="13"
+                               Foreground="White"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
             </Border>
-            
-            <!-- Строка 4: Вкладки ответа -->
-            <TabControl Grid.Row="4" 
-                        Margin="10,0,10,10"
-                        SelectedIndex="0">
-                <TabItem Header="Body">
+
+            <!-- ═══════════════════════════════════════════════ -->
+            <!-- Row 5: Response tabs -->
+            <!-- ═══════════════════════════════════════════════ -->
+            <TabControl Grid.Row="5" Margin="12,0,12,12" SelectedIndex="0">
+
+                <!-- Body -->
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="CodeJson" Width="16" Height="16"
+                                                     VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Body" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </TabItem.Header>
                     <DockPanel>
-                        <Button Content="Copy"
-                                Command="{Binding CopyResponseCommand}"
+                        <Button Command="{Binding CopyResponseCommand}"
                                 DockPanel.Dock="Top"
                                 HorizontalAlignment="Right"
                                 Style="{StaticResource MaterialDesignFlatButton}"
-                                Padding="8,4"
-                                Margin="0,0,0,4"/>
+                                Padding="10,4" Margin="0,2,0,2" Height="32">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="ContentCopy" Width="14" Height="14"
+                                                         VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBlock Text="Copy" VerticalAlignment="Center" FontSize="12"/>
+                            </StackPanel>
+                        </Button>
                         <TextBox Text="{Binding ResponseBody, Mode=OneWay}"
-                                 IsReadOnly="True"
-                                 TextWrapping="NoWrap"
+                                 Style="{StaticResource CleanInput}"
+                                 IsReadOnly="True" TextWrapping="NoWrap"
                                  HorizontalScrollBarVisibility="Auto"
                                  VerticalScrollBarVisibility="Auto"
-                                 FontFamily="Consolas"
-                                 BorderThickness="0"
-                                 Padding="8"/>
+                                 FontFamily="Consolas" FontSize="12"
+                                 materialDesign:HintAssist.Hint="Response body..."
+                                 Padding="10"/>
                     </DockPanel>
                 </TabItem>
-                
-                <TabItem Header="Headers">
+
+                <!-- Headers -->
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="FormatListBulleted" Width="16" Height="16"
+                                                     VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Headers" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </TabItem.Header>
                     <TextBox Text="{Binding ResponseHeadersText, Mode=OneWay}"
-                             IsReadOnly="True"
-                             AcceptsReturn="True"
-                             TextWrapping="Wrap"
+                             Style="{StaticResource CleanInput}"
+                             IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
                              VerticalScrollBarVisibility="Auto"
-                             FontFamily="Consolas"
-                             BorderThickness="0"
-                             Padding="8"/>
+                             FontFamily="Consolas" FontSize="12"
+                             materialDesign:HintAssist.Hint="Response headers..."
+                             MinHeight="80"/>
                 </TabItem>
-                
-                <TabItem Header="History">
+
+                <!-- History -->
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="History" Width="16" Height="16"
+                                                     VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="History" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </TabItem.Header>
                     <DataGrid ItemsSource="{Binding RequestHistory}"
-                              AutoGenerateColumns="False"
-                              IsReadOnly="True"
-                              CanUserAddRows="False"
-                              HeadersVisibility="Column">
+                              Style="{StaticResource CleanDataGrid}"
+                              IsReadOnly="True">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Method" Binding="{Binding Method}" Width="60"/>
                             <DataGridTextColumn Header="URL" Binding="{Binding Url}" Width="3*"/>
@@ -666,54 +1060,175 @@
                         </DataGrid.Columns>
                     </DataGrid>
                 </TabItem>
-                
-                <TabItem Header="Code">
+
+                <!-- Code -->
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="CodeTags" Width="16" Height="16"
+                                                     VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Code" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </TabItem.Header>
                     <DockPanel>
-                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="0,4,0,4">
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="4,6,4,4">
                             <ComboBox ItemsSource="{Binding CodeFormats}"
                                       SelectedItem="{Binding SelectedCodeFormat}"
-                                      Width="150"
-                                      Margin="0,0,8,0"/>
-                            <Button Content="Generate"
-                                    Command="{Binding GenerateCodeCommand}"
+                                      Style="{StaticResource CleanComboBox}"
+                                      Width="170" Margin="0,0,8,0"/>
+                            <Button Command="{Binding GenerateCodeCommand}"
                                     Style="{StaticResource MaterialDesignFlatMidBgButton}"
-                                    Padding="12,4"
-                                    Margin="0,0,8,0"/>
-                            <Button Content="Copy"
-                                    Command="{Binding CopyGeneratedCodeCommand}"
+                                    Padding="12,4" Height="32" Margin="0,0,8,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="CodeBraces" Width="16" Height="16"
+                                                             VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Generate" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Command="{Binding CopyGeneratedCodeCommand}"
                                     Style="{StaticResource MaterialDesignFlatButton}"
-                                    Padding="8,4"/>
+                                    Padding="8,4" Height="32">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="ContentCopy" Width="14" Height="14"
+                                                             VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Copy" VerticalAlignment="Center" FontSize="12"/>
+                                </StackPanel>
+                            </Button>
                         </StackPanel>
                         <TextBox Text="{Binding GeneratedCode, Mode=OneWay}"
-                                 IsReadOnly="True"
-                                 TextWrapping="NoWrap"
-                                 AcceptsReturn="True"
+                                 Style="{StaticResource CleanInput}"
+                                 IsReadOnly="True" TextWrapping="NoWrap" AcceptsReturn="True"
                                  HorizontalScrollBarVisibility="Auto"
                                  VerticalScrollBarVisibility="Auto"
-                                 FontFamily="Consolas"
-                                 BorderThickness="0"
-                                 Padding="8"/>
+                                 FontFamily="Consolas" FontSize="12"
+                                 materialDesign:HintAssist.Hint="Generated code..."
+                                 Padding="10"/>
                     </DockPanel>
                 </TabItem>
-                
-                <TabItem Header="Test Results">
-                    <ListView ItemsSource="{Binding TestResults}" Padding="8">
+
+                <!-- Test Results -->
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ClipboardCheckOutline" Width="16" Height="16"
+                                                     VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Test Results" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <ListView ItemsSource="{Binding TestResults}" Padding="10">
                         <ListView.ItemTemplate>
                             <DataTemplate>
-                                <StackPanel Orientation="Horizontal" Margin="0,2">
+                                <StackPanel Orientation="Horizontal" Margin="0,3">
                                     <Ellipse Width="12" Height="12"
                                              Fill="{Binding Passed, Converter={StaticResource BoolToTestResultBrushConverter}}"
-                                             Margin="0,0,8,0"
-                                             VerticalAlignment="Center"/>
+                                             Margin="0,0,10,0" VerticalAlignment="Center"/>
                                     <TextBlock Text="{Binding Description}"
                                                VerticalAlignment="Center"
-                                               FontFamily="Consolas"/>
+                                               FontFamily="Consolas" FontSize="12.5"/>
                                 </StackPanel>
                             </DataTemplate>
                         </ListView.ItemTemplate>
                     </ListView>
                 </TabItem>
                 
+                <!-- AI -->
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="RobotOutline" Width="16" Height="16"
+                                                     VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="AI" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <Grid Margin="8">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Row 0: Model selector + API Key -->
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+                            <ComboBox ItemsSource="{Binding AiModels}"
+                                      SelectedItem="{Binding SelectedAiModel}"
+                                      DisplayMemberPath="DisplayName"
+                                      Style="{StaticResource CleanComboBox}"
+                                      Width="240"
+                                      materialDesign:HintAssist.Hint="AI Model"
+                                      Margin="0,0,10,0"/>
+                            <TextBox Text="{Binding AiApiKey, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource CleanInput}"
+                                     Width="300"
+                                     materialDesign:HintAssist.Hint="API Key (xAI or Gemini)"/>
+                        </StackPanel>
+
+                        <!-- Row 1: Explain Response -->
+                        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8">
+                            <Button Command="{Binding ExplainResponseCommand}"
+                                    Style="{StaticResource MaterialDesignFlatMidBgButton}"
+                                    Height="34" Padding="14,0" Margin="0,0,8,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="AutoFix" Width="16" Height="16"
+                                                             VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Explain Response" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+
+                        <!-- Row 2: AI Generate JSON Body -->
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBox Text="{Binding AiBodyPrompt, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource CleanInput}"
+                                     Width="380"
+                                     materialDesign:HintAssist.Hint="Describe JSON (e.g. user with name, email, age 25)"
+                                     Margin="0,0,8,0"/>
+                            <Button Command="{Binding GenerateJsonBodyCommand}"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    Height="34" Padding="14,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="CodeJson" Width="16" Height="16"
+                                                             VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Generate JSON" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+
+                        <!-- Row 3: cURL Import -->
+                        <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBox Text="{Binding CurlInput, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource CleanInput}"
+                                     Width="380"
+                                     materialDesign:HintAssist.Hint="Paste cURL command here..."
+                                     Margin="0,0,8,0"/>
+                            <Button Command="{Binding ParseCurlCommand}"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    Height="34" Padding="14,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Console" Width="16" Height="16"
+                                                             VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Import cURL" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+
+                        <!-- Row 4: Loading + AI output -->
+                        <DockPanel Grid.Row="4">
+                            <ProgressBar DockPanel.Dock="Top" IsIndeterminate="True" Height="3"
+                                         Visibility="{Binding IsAiLoading, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                         Margin="0,0,0,6"/>
+                            <TextBox Text="{Binding AiExplanation, Mode=OneWay}"
+                                     Style="{StaticResource CleanInput}"
+                                     IsReadOnly="True" AcceptsReturn="True"
+                                     TextWrapping="Wrap"
+                                     VerticalScrollBarVisibility="Auto"
+                                     FontFamily="Consolas" FontSize="12"
+                                     materialDesign:HintAssist.Hint="AI response will appear here..."
+                                     MinHeight="100"/>
+                        </DockPanel>
+                    </Grid>
+                </TabItem>
             </TabControl>
         </Grid>
     </Grid>

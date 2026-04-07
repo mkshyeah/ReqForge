@@ -1,0 +1,39 @@
+<Window x:Class="ReqForge.Views.InputDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        SizeToContent="WidthAndHeight"
+        MinWidth="400"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        TextElement.Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+        Background="{DynamicResource MaterialDesign.Brush.Background}"
+        WindowStyle="ToolWindow"
+        ShowInTaskbar="False">
+    <StackPanel Margin="24,20,24,18">
+        <TextBlock x:Name="PromptText" 
+                   FontSize="14" FontWeight="SemiBold"
+                   Margin="0,0,0,14"/>
+        <TextBox x:Name="InputBox"
+                 FontSize="14" FontWeight="Medium"
+                 FontFamily="Segoe UI"
+                 Padding="10,8"
+                 materialDesign:HintAssist.Hint="Enter name..."
+                 materialDesign:HintAssist.IsFloating="False"
+                 Margin="0,0,0,18"
+                 KeyDown="InputBox_KeyDown"/>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Cancel" 
+                    Click="Cancel_Click"
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Margin="0,0,8,0"
+                    Height="34"/>
+            <Button Content="OK" 
+                    Click="Ok_Click"
+                    Style="{StaticResource MaterialDesignFlatMidBgButton}"
+                    IsDefault="True"
+                    MinWidth="90"
+                    Height="34"/>
+        </StackPanel>
+    </StackPanel>
+</Window>
