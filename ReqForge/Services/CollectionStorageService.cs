@@ -19,7 +19,7 @@ public class CollectionStorageService : ICollectionStorageService
         var user = _db.Users.FirstOrDefault(u => u.UserName == username);
         if (user == null) return new List<RequestCollection>();
 
-        return _db.Collections
+        var collections = _db.Collections
             .Where(c => c.UserId == user.Id)
             .Include(c => c.Requests)
                 .ThenInclude(r => r.Headers)
@@ -27,6 +27,12 @@ public class CollectionStorageService : ICollectionStorageService
                 .ThenInclude(r => r.QueryParams)
             .AsNoTracking()
             .ToList();
+
+        foreach (var collection in collections)
+        foreach (var request in collection.Requests)
+            DecryptRequestSecrets(request);
+
+        return collections;
     }
 
     public void AddCollection(RequestCollection collection, string username)
@@ -59,9 +65,11 @@ public class CollectionStorageService : ICollectionStorageService
 
     public void AddRequest(SavedRequest request, int collectionId)
     {
+        EncryptRequestSecrets(request);
         request.CollectionId = collectionId;
         _db.SavedRequests.Add(request);
         _db.SaveChanges();
+        DecryptRequestSecrets(request);
     }
 
     public void UpdateRequest(SavedRequest request)
@@ -79,11 +87,11 @@ public class CollectionStorageService : ICollectionStorageService
         existing.Body = request.Body;
         existing.BodyType = request.BodyType;
         existing.AuthType = request.AuthType;
-        existing.BearerToken = request.BearerToken;
+        existing.BearerToken = SecretProtector.Protect(request.BearerToken);
         existing.BasicAuthUsername = request.BasicAuthUsername;
-        existing.BasicAuthPassword = request.BasicAuthPassword;
+        existing.BasicAuthPassword = SecretProtector.Protect(request.BasicAuthPassword);
         existing.ApiKeyName = request.ApiKeyName;
-        existing.ApiKeyValue = request.ApiKeyValue;
+        existing.ApiKeyValue = SecretProtector.Protect(request.ApiKeyValue);
 
         _db.RequestHeaders.RemoveRange(existing.Headers);
         existing.Headers = request.Headers;
@@ -119,6 +127,7 @@ public class CollectionStorageService : ICollectionStorageService
             col.Id = 0;
             foreach (var req in col.Requests)
             {
+                EncryptRequestSecrets(req);
                 req.Id = 0;
                 req.CollectionId = 0;
                 foreach (var h in req.Headers)
@@ -136,5 +145,23 @@ public class CollectionStorageService : ICollectionStorageService
 
         _db.Collections.AddRange(collections);
         _db.SaveChanges();
+
+        foreach (var col in collections)
+        foreach (var req in col.Requests)
+            DecryptRequestSecrets(req);
+    }
+
+    private static void EncryptRequestSecrets(SavedRequest request)
+    {
+        request.BearerToken = SecretProtector.Protect(request.BearerToken);
+        request.BasicAuthPassword = SecretProtector.Protect(request.BasicAuthPassword);
+        request.ApiKeyValue = SecretProtector.Protect(request.ApiKeyValue);
+    }
+
+    private static void DecryptRequestSecrets(SavedRequest request)
+    {
+        request.BearerToken = SecretProtector.Unprotect(request.BearerToken);
+        request.BasicAuthPassword = SecretProtector.Unprotect(request.BasicAuthPassword);
+        request.ApiKeyValue = SecretProtector.Unprotect(request.ApiKeyValue);
     }
 }

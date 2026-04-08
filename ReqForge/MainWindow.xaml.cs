@@ -1,7 +1,7 @@
-﻿using System.Windows;
-using ReqForge.Data;
+﻿using System.ComponentModel;
+using System.Windows;
+using Microsoft.Extensions.DependencyInjection;
 using ReqForge.Models;
-using ReqForge.Services;
 using ReqForge.ViewModels;
 
 namespace ReqForge;
@@ -12,16 +12,8 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
-        var db = new AppDbContext();
-        db.Database.EnsureCreated();
-
-        var httpService = new HttpClientService();
-        var collectionStorage = new CollectionStorageService(db);
-        var envStorage = new EnvironmentStorageService(db);
-        var authService = new AuthService(db);
-        var historyService = new RequestHistoryService(db);
-
-        DataContext = new MainViewModel(httpService, collectionStorage, envStorage, authService, historyService);
+        if (!DesignerProperties.GetIsInDesignMode(this) && Application.Current is App app)
+            DataContext = app.Services.GetRequiredService<MainViewModel>();
     }
 
     private void TreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)

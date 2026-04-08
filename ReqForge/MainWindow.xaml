@@ -358,12 +358,13 @@
                                      materialDesign:HintAssist.Hint="Username"
                                      VerticalAlignment="Center"
                                      Margin="0,0,8,0"/>
-                            <TextBox Width="140"
-                                     Text="{Binding LoginPassword, UpdateSourceTrigger=PropertyChanged}"
-                                     Style="{StaticResource CleanInput}"
-                                     materialDesign:HintAssist.Hint="Password"
-                                     VerticalAlignment="Center"
-                                     Margin="0,0,8,0"/>
+                            <PasswordBox Width="140"
+                                         Style="{StaticResource CleanPasswordBox}"
+                                         materialDesign:HintAssist.Hint="Password"
+                                         helpers:BindablePasswordBox.BindPassword="True"
+                                         helpers:BindablePasswordBox.BoundPassword="{Binding LoginPassword, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         VerticalAlignment="Center"
+                                         Margin="0,0,8,0"/>
                             <Button Command="{Binding LoginCommand}"
                                     Style="{StaticResource MaterialDesignFlatMidBgButton}"
                                     Height="32" Padding="12,0"
@@ -795,9 +796,11 @@
                             <TextBox Text="{Binding BasicAuthUsername, UpdateSourceTrigger=PropertyChanged}"
                                      Style="{StaticResource CleanInput}"
                                      materialDesign:HintAssist.Hint="Username" Margin="0,0,0,10"/>
-                            <TextBox Text="{Binding BasicAuthPassword, UpdateSourceTrigger=PropertyChanged}"
-                                     Style="{StaticResource CleanInput}"
-                                     materialDesign:HintAssist.Hint="Password" Margin="0,0,0,10"/>
+                            <PasswordBox Style="{StaticResource CleanPasswordBox}"
+                                         materialDesign:HintAssist.Hint="Password"
+                                         helpers:BindablePasswordBox.BindPassword="True"
+                                         helpers:BindablePasswordBox.BoundPassword="{Binding BasicAuthPassword, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         Margin="0,0,0,10"/>
                         </StackPanel>
                         <StackPanel Visibility="{Binding SelectedAuthType,
                                     Converter={StaticResource StringMatchToVisibilityConverter},

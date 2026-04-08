@@ -283,7 +283,9 @@ namespace ReqForge.ViewModels
             var filtered = Collections
                 .Select(c => new RequestCollection
                 {
+                    Id = c.Id,
                     Name = c.Name,
+                    UserId = c.UserId,
                     Requests = new ObservableCollection<SavedRequest>(
                         c.Requests.Where(r =>
                             r.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
