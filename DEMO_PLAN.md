@@ -1,6 +1,6 @@
 # ReqForge — сценарий защиты и шпаргалка
 
-Открой в Rider: двойной клик по `DEMO_PLAN.md`.
+Открой в Rider: двойной клик по `DEMO_PLAN.md`. Только URL, тела и переменные — в `DEMO_REQUESTS.md`.
 
 ---
 
