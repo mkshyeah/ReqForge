@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Text;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -42,6 +43,8 @@ namespace ReqForge.ViewModels
         [ObservableProperty] private string _basicAuthPassword = string.Empty;
         [ObservableProperty] private string _apiKeyName = string.Empty;
         [ObservableProperty] private string _apiKeyValue = string.Empty;
+        [ObservableProperty] private ObservableCollection<RequestTabItem> _requestTabs = new();
+        [ObservableProperty] private RequestTabItem? _selectedRequestTab;
 
         public List<string> AuthTypes { get; } = new() { "None", "Bearer Token", "Basic Auth", "API Key" };
         public List<string> Methods { get; } = new() { "GET", "POST", "PUT", "PATCH", "DELETE" };
@@ -50,6 +53,9 @@ namespace ReqForge.ViewModels
         public ObservableCollection<QueryParam> QueryParams { get; } = new();
         public ObservableCollection<QueryParam> FormDataItems { get; } = new();
         public ObservableCollection<RequestHistoryItem> RequestHistory { get; } = new();
+        private readonly Dictionary<Guid, RequestTabDraft> _tabDrafts = new();
+        private Guid? _lastSelectedTabId;
+        private bool _isApplyingTabState;
 
         [ObservableProperty] private ObservableCollection<RequestCollection> _collections = new();
 
@@ -73,6 +79,7 @@ namespace ReqForge.ViewModels
             Collections = new ObservableCollection<RequestCollection>();
 
             if (Headers.Count == 0) Headers.Add(new HeaderItem("", ""));
+            InitRequestTabs();
             InitWebSocket();
         }
 
@@ -122,24 +129,23 @@ namespace ReqForge.ViewModels
                         break;
                 }
 
-                var resolvedHeaders = new ObservableCollection<HeaderItem>(
-                    Headers.Select(h => new HeaderItem(
-                        ResolveVariables(h.Key),
-                        ResolveVariables(h.Value)))
-                );
+                var headerMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-                if (contentType != null && !resolvedHeaders.Any(h =>
-                        h.Key.Equals("Content-Type", StringComparison.OrdinalIgnoreCase)))
+                foreach (var h in Headers
+                             .Where(h => !string.IsNullOrWhiteSpace(h.Key))
+                             .Select(h => new HeaderItem(ResolveVariables(h.Key), ResolveVariables(h.Value))))
                 {
-                    resolvedHeaders.Add(new HeaderItem("Content-Type", contentType));
+                    headerMap[h.Key] = h.Value ?? string.Empty;
                 }
+
+                if (contentType != null && !headerMap.ContainsKey("Content-Type"))
+                    headerMap["Content-Type"] = contentType;
 
                 switch (SelectedAuthType)
                 {
                     case "Bearer Token":
                         if (!string.IsNullOrWhiteSpace(BearerToken))
-                            resolvedHeaders.Add(new HeaderItem("Authorization",
-                                $"Bearer {ResolveVariables(BearerToken)}"));
+                            headerMap["Authorization"] = $"Bearer {ResolveVariables(BearerToken)}";
                         break;
                     case "Basic Auth":
                         if (!string.IsNullOrWhiteSpace(BasicAuthUsername))
@@ -147,16 +153,18 @@ namespace ReqForge.ViewModels
                             var credentials = Convert.ToBase64String(
                                 Encoding.UTF8.GetBytes(
                                     $"{ResolveVariables(BasicAuthUsername)}:{ResolveVariables(BasicAuthPassword)}"));
-                            resolvedHeaders.Add(new HeaderItem("Authorization", $"Basic {credentials}"));
+                            headerMap["Authorization"] = $"Basic {credentials}";
                         }
 
                         break;
                     case "API Key":
                         if (!string.IsNullOrWhiteSpace(ApiKeyName))
-                            resolvedHeaders.Add(new HeaderItem(ResolveVariables(ApiKeyName),
-                                ResolveVariables(ApiKeyValue)));
+                            headerMap[ResolveVariables(ApiKeyName)] = ResolveVariables(ApiKeyValue);
                         break;
                 }
+
+                var resolvedHeaders = new ObservableCollection<HeaderItem>(
+                    headerMap.Select(kv => new HeaderItem(kv.Key, kv.Value)));
 
                 var result = await _service.SendAsync(SelectedMethod, resolvedUrl, resolvedHeaders, resolvedBody);
 
@@ -271,6 +279,8 @@ namespace ReqForge.ViewModels
         }
 
         partial void OnSearchTextChanged(string value) => ApplyFilter();
+        partial void OnUrlChanged(string value) => UpdateSelectedTabTitle();
+        partial void OnSelectedMethodChanged(string value) => UpdateSelectedTabTitle();
 
         private void ApplyFilter()
         {

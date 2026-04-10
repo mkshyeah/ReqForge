@@ -177,6 +177,9 @@ public partial class MainViewModel
         BasicAuthPassword = request.BasicAuthPassword;
         ApiKeyName = request.ApiKeyName;
         ApiKeyValue = request.ApiKeyValue;
+
+        UpdateSelectedTabTitle();
+        SaveCurrentTabDraft();
     }
 
     [RelayCommand]

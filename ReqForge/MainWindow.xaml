@@ -14,7 +14,8 @@
         TextElement.Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
         Title="ReqForge" Width="1280" Height="800"
         MinWidth="960" MinHeight="640"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen"
+        Loaded="Window_Loaded">
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
@@ -79,6 +80,22 @@
             <Setter Property="materialDesign:HintAssist.IsFloating" Value="False"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="Padding" Value="10,8"/>
+        </Style>
+
+        <Style x:Key="DeleteIconButton" TargetType="Button">
+            <Setter Property="Background" Value="#FFF5F5"/>
+            <Setter Property="BorderBrush" Value="#D32F2F"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Foreground" Value="#C62828"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="Width" Value="24"/>
+            <Setter Property="Height" Value="24"/>
         </Style>
     </Window.Resources>
 
@@ -292,6 +309,7 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
@@ -393,8 +411,53 @@
                 </DockPanel>
             </Border>
 
-            <!-- Row 1: URL bar (Postman-style integrated) -->
-            <Border Grid.Row="1" Margin="12,10,12,0"
+            <!-- Row 1: Request tabs -->
+            <DockPanel Grid.Row="1" Margin="12,6,12,0">
+                <Button Command="{Binding NewRequestTabCommand}"
+                        DockPanel.Dock="Right"
+                        Style="{StaticResource MaterialDesignIconButton}"
+                        Width="26" Height="26"
+                        ToolTip="New Request Tab">
+                    <materialDesign:PackIcon Kind="Plus" Width="16" Height="16"/>
+                </Button>
+                <TabControl ItemsSource="{Binding RequestTabs}"
+                            SelectedItem="{Binding SelectedRequestTab}"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Height="30"
+                            Margin="0,0,8,0">
+                    <TabControl.ItemContainerStyle>
+                        <Style TargetType="TabItem">
+                            <Setter Property="Padding" Value="10,2"/>
+                            <Setter Property="MinHeight" Value="28"/>
+                            <Setter Property="VerticalContentAlignment" Value="Center"/>
+                            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                        </Style>
+                    </TabControl.ItemContainerStyle>
+                    <TabControl.ContentTemplate>
+                        <DataTemplate>
+                            <Grid />
+                        </DataTemplate>
+                    </TabControl.ContentTemplate>
+                    <TabControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type models:RequestTabItem}">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Title}" Margin="0,0,4,0" VerticalAlignment="Center" FontSize="12.5" TextTrimming="CharacterEllipsis"/>
+                                <Button Command="{Binding DataContext.CloseRequestTabCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                        CommandParameter="{Binding}"
+                                        Style="{StaticResource MaterialDesignIconButton}"
+                                        Width="16" Height="16"
+                                        ToolTip="Close Tab">
+                                    <materialDesign:PackIcon Kind="Close" Width="10" Height="10"/>
+                                </Button>
+                            </StackPanel>
+                        </DataTemplate>
+                    </TabControl.ItemTemplate>
+                </TabControl>
+            </DockPanel>
+
+            <!-- Row 2: URL bar (Postman-style integrated) -->
+            <Border Grid.Row="2" Margin="12,8,12,0"
                     BorderBrush="{DynamicResource MaterialDesign.Brush.ForegroundLight}"
                     BorderThickness="1.5" CornerRadius="8"
                     Padding="3"
@@ -443,8 +506,8 @@
                 </DockPanel>
             </Border>
 
-            <!-- Row 2: ProgressBar -->
-            <ProgressBar Grid.Row="2"
+            <!-- Row 3: ProgressBar -->
+            <ProgressBar Grid.Row="3"
                          IsIndeterminate="True"
                          Height="3"
                          Margin="12,0"
@@ -452,9 +515,9 @@
                               Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
             <!-- ═══════════════════════════════════════════════ -->
-            <!-- Row 3: Request config tabs -->
+            <!-- Row 4: Request config tabs -->
             <!-- ═══════════════════════════════════════════════ -->
-            <TabControl Grid.Row="3" Margin="12,6,12,4"
+            <TabControl Grid.Row="4" Margin="12,6,12,4"
                         MinHeight="160" MaxHeight="260">
 
                 <!-- Headers -->
@@ -505,11 +568,11 @@
                                             <Button Command="{Binding DataContext.RemoveHeaderCommand,
                                                     RelativeSource={RelativeSource AncestorType=Window}}"
                                                     CommandParameter="{Binding}"
-                                                    Style="{StaticResource MaterialDesignIconButton}"
-                                                    Width="28" Height="28"
-                                                    Foreground="#C62828" ToolTip="Remove">
-                                                <materialDesign:PackIcon Kind="CloseCircleOutline" Width="16" Height="16"/>
-                                            </Button>
+                                                    Style="{StaticResource DeleteIconButton}"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    Content="×"
+                                                    ToolTip="Remove"/>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
@@ -585,10 +648,11 @@
                                                 <Button Command="{Binding DataContext.RemoveFormDataItemCommand,
                                                         RelativeSource={RelativeSource AncestorType=Window}}"
                                                         CommandParameter="{Binding}"
-                                                        Style="{StaticResource MaterialDesignIconButton}"
-                                                        Width="28" Height="28"
-                                                        Foreground="#C62828" ToolTip="Remove">
-                                                    <materialDesign:PackIcon Kind="CloseCircleOutline" Width="16" Height="16"/>
+                                                        Style="{StaticResource DeleteIconButton}"
+                                                        HorizontalAlignment="Center"
+                                                        VerticalAlignment="Center"
+                                                        Content="×"
+                                                        ToolTip="Remove">
                                                 </Button>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
@@ -651,10 +715,11 @@
                                             <Button Command="{Binding DataContext.RemoveQueryParamCommand,
                                                     RelativeSource={RelativeSource AncestorType=Window}}"
                                                     CommandParameter="{Binding}"
-                                                    Style="{StaticResource MaterialDesignIconButton}"
-                                                    Width="28" Height="28"
-                                                    Foreground="#C62828" ToolTip="Remove">
-                                                <materialDesign:PackIcon Kind="CloseCircleOutline" Width="16" Height="16"/>
+                                                    Style="{StaticResource DeleteIconButton}"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    Content="×"
+                                                    ToolTip="Remove">
                                             </Button>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
@@ -742,10 +807,11 @@
                                         <DataTemplate>
                                             <Button Command="{Binding DataContext.RemoveVariableCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                     CommandParameter="{Binding}"
-                                                    Style="{StaticResource MaterialDesignIconButton}"
-                                                    Width="28" Height="28"
-                                                    Foreground="#C62828" ToolTip="Remove">
-                                                <materialDesign:PackIcon Kind="CloseCircleOutline" Width="16" Height="16"/>
+                                                    Style="{StaticResource DeleteIconButton}"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    Content="×"
+                                                    ToolTip="Remove">
                                             </Button>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
@@ -869,10 +935,11 @@
                                         <DataTemplate>
                                             <Button Command="{Binding DataContext.RemoveTestCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                     CommandParameter="{Binding}"
-                                                    Style="{StaticResource MaterialDesignIconButton}"
-                                                    Width="28" Height="28"
-                                                    Foreground="#C62828" ToolTip="Remove">
-                                                <materialDesign:PackIcon Kind="CloseCircleOutline" Width="16" Height="16"/>
+                                                    Style="{StaticResource DeleteIconButton}"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    Content="×"
+                                                    ToolTip="Remove">
                                             </Button>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
@@ -966,9 +1033,9 @@
             </TabControl>
 
             <!-- ═══════════════════════════════════════════════ -->
-            <!-- Row 4: Status badge -->
+            <!-- Row 5: Status badge -->
             <!-- ═══════════════════════════════════════════════ -->
-            <Border Grid.Row="4"
+            <Border Grid.Row="5"
                     Background="{Binding StatusInfo, Converter={StaticResource StatusCodeToBrushConverter}}"
                     Margin="12,6,12,4"
                     CornerRadius="6"
@@ -988,9 +1055,9 @@
             </Border>
 
             <!-- ═══════════════════════════════════════════════ -->
-            <!-- Row 5: Response tabs -->
+            <!-- Row 6: Response tabs -->
             <!-- ═══════════════════════════════════════════════ -->
-            <TabControl Grid.Row="5" Margin="12,0,12,12" SelectedIndex="0">
+            <TabControl Grid.Row="6" Margin="12,0,12,12" SelectedIndex="0">
 
                 <!-- Body -->
                 <TabItem>
@@ -1233,6 +1300,21 @@
                     </Grid>
                 </TabItem>
             </TabControl>
+        </Grid>
+        <Grid x:Name="StartupOverlay"
+              Grid.Column="0"
+              Grid.ColumnSpan="3"
+              Panel.ZIndex="9999"
+              Background="#420d09"
+              Opacity="1">
+            <TextBlock x:Name="StartupTitle"
+                       Text="ReqForge"
+                       Opacity="0"
+                       Foreground="#FFF8E1"
+                       FontSize="56"
+                       FontWeight="Bold"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"/>
         </Grid>
     </Grid>
 </Window>
