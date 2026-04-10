@@ -100,16 +100,7 @@ public partial class MainViewModel
             return;
         }
 
-        string requestName;
-        try
-        {
-            var uri = new Uri(Url);
-            requestName = $"{SelectedMethod} {uri.AbsolutePath}";
-        }
-        catch
-        {
-            requestName = $"{SelectedMethod} (New Request)";
-        }
+        var requestName = BuildRequestNameFromUrl(SelectedMethod, Url);
 
         try
         {
@@ -149,6 +140,23 @@ public partial class MainViewModel
         {
             StatusInfo = $"Save failed: {ex.InnerException?.Message ?? ex.Message}";
         }
+    }
+
+    private static string BuildRequestNameFromUrl(string method, string url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+            return $"{method} (New Request)";
+
+        // Support template URLs like {{base_url}}/posts/{{id}} that are not valid Uri.
+        var cleaned = url.Trim();
+        cleaned = cleaned.Replace("https://", "", StringComparison.OrdinalIgnoreCase)
+            .Replace("http://", "", StringComparison.OrdinalIgnoreCase);
+
+        // Keep host/path/query so similar requests are distinguishable.
+        if (cleaned.Length > 64)
+            cleaned = cleaned[..64] + "...";
+
+        return $"{method} {cleaned}";
     }
 
     [RelayCommand]

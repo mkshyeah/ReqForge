@@ -1126,7 +1126,7 @@
                             <DataGridTextColumn Header="URL" Binding="{Binding Url}" Width="3*"/>
                             <DataGridTextColumn Header="Status" Binding="{Binding StatusCode}" Width="60"/>
                             <DataGridTextColumn Header="Time" Binding="{Binding ElapsedTime}" Width="80"/>
-                            <DataGridTextColumn Header="Sent at" Binding="{Binding SentAt, StringFormat=HH:mm:ss}" Width="80"/>
+                            <DataGridTextColumn Header="Sent at (GMT+5)" Binding="{Binding SentAt, StringFormat=dd.MM.yyyy HH:mm:ss}" Width="150"/>
                         </DataGrid.Columns>
                     </DataGrid>
                 </TabItem>
@@ -1292,10 +1292,11 @@
                                      Style="{StaticResource CleanInput}"
                                      IsReadOnly="True" AcceptsReturn="True"
                                      TextWrapping="Wrap"
+                                     HorizontalScrollBarVisibility="Auto"
                                      VerticalScrollBarVisibility="Auto"
                                      FontFamily="Consolas" FontSize="12"
                                      materialDesign:HintAssist.Hint="AI response will appear here..."
-                                     MinHeight="100"/>
+                                     MinHeight="140"/>
                         </DockPanel>
                     </Grid>
                 </TabItem>

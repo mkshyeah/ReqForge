@@ -17,6 +17,7 @@ namespace ReqForge.ViewModels
         private readonly IEnvironmentStorageService _envStorage;
         private readonly IAuthService _authService;
         private readonly IRequestHistoryService _historyService;
+        private static readonly TimeSpan GmtPlus5Offset = TimeSpan.FromHours(5);
 
         [ObservableProperty] [NotifyCanExecuteChangedFor(nameof(SendCommand))]
         private string _url = string.Empty;
@@ -183,7 +184,7 @@ namespace ReqForge.ViewModels
                     Url = resolvedUrl,
                     StatusCode = (int)result.StatusCode,
                     ElapsedTime = result.ElapsedTime.TotalMilliseconds.ToString("F0") + " ms",
-                    SentAt = DateTime.UtcNow
+                    SentAt = DateTimeOffset.UtcNow.ToOffset(GmtPlus5Offset).DateTime
                 };
 
                 if (IsLoggedIn && !string.IsNullOrEmpty(CurrentUsername))
@@ -253,6 +254,7 @@ namespace ReqForge.ViewModels
             WriteIndented = true,
             Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
         };
+
 
         [RelayCommand]
         private void DeleteEnvironment(RequestEnvironment env)
