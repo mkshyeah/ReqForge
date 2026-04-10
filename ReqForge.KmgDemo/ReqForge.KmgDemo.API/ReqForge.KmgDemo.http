@@ -1,0 +1,6 @@
+@ReqForge.KmgDemo_HostAddress = http://localhost:5062
+
+GET {{ReqForge.KmgDemo_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
