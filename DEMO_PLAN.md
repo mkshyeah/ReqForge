@@ -1,196 +1,115 @@
 # ReqForge — сценарий защиты и шпаргалка
 
-Открой этот файл в Rider: двойной клик по `DEMO_PLAN.md` → удобно читать рядом с кодом (при необходимости: ПКМ → **Open In** → **Default Editor** или встроенный просмотр).
+Открой в Rider: двойной клик по `DEMO_PLAN.md`.
 
 ---
 
-## Часть A — основной показ (~7 минут): ReqForge + локальное демо API «КазМунайГаз»
+## Часть A — основной показ (~7 минут): ReqForge + публичные API
 
-**Идея для жюри:** на одном ноутбуке крутится простой .NET 8 REST API (без интернета и без БД — данные в памяти). ReqForge — ваш клиент: коллекции, среда, токен, запросы, тесты ответа, история.
+**Фокус:** клиент ReqForge (запросы, коллекции, среды, тесты, история, код).  
+**Авторизацию** показывай на **httpbin.org** (как раньше): без токена не проходит, с токеном — проходит.  
+**CRUD и JSON** — на **jsonplaceholder.typicode.com** (знакомый всем сценарий, не нужен свой backend).
 
-**Интернет для этой части не нужен** (только если отдельно показываешь AI из Части B).
+**Нужен интернет** (и отдельно ключ Groq, если показываешь AI из части C).
 
----
-
-### A0. Чеклист за 2 минуты до входа в аудиторию
+### A0. Чеклист перед входом
 
 | Проверка | Действие |
 |----------|----------|
-| API запускается | Rider → solution `ReqForge.KmgDemo` → проект `ReqForge.KmgDemo.API` → **Run** (`Shift+F10`) |
-| Порт | В окне **Run** строка `Now listening on: http://localhost:XXXX` — запомни порт (часто **5062**, см. `ReqForge.KmgDemo.API/Properties/launchSettings.json`, профиль **http**) |
-| Swagger | Браузер: `http://localhost:5062/swagger` открывается |
-| ReqForge | WPF-приложение собирается и запускается |
-| Коллекция | В ReqForge заранее создана коллекция вроде `KMG Demo` с запросами ниже (или импорт готового JSON, если делал) |
-| Среда | Выбрана среда с переменными из таблицы ниже; `base_url` совпадает с портом API |
-| Логин в ReqForge | Если показываешь свою БД пользователя — заранее `demo` / `demo123` или свой тестовый аккаунт |
+| Интернет | Есть |
+| ReqForge | Запускается, залогинен тестовый пользователь (`demo` / `demo123` или свой) |
+| Коллекция | Есть коллекция с запросами из таблицы ниже |
+| Среда | `base_url` = `https://jsonplaceholder.typicode.com` |
+| (Опционально) Локальный KMG API | Только если хочешь 1 минуту «свой CRUD» — см. часть B |
+
+### A1. Переменные среды (пример)
+
+| Переменная | Значение |
+|------------|----------|
+| `base_url` | `https://jsonplaceholder.typicode.com` |
+| `post_id` | `1` |
+
+URL: `{{base_url}}/posts/{{post_id}}`
+
+### A2. Порядок в ReqForge (рекомендуемый)
+
+1. **GET** `{{base_url}}/posts/1` — базовый запрос, JSON, время, **History**.
+2. **POST** `{{base_url}}/posts` — тело JSON (как в старом плане), **201**.
+3. **Params:** GET `{{base_url}}/posts` + `userId` = `1`.
+4. **Auth (важно для простоты):**
+   - **Bearer:** GET `https://httpbin.org/bearer`, в ReqForge вкладка **Auth** → Bearer → `my-secret-token-123` → **Send** → `200`.
+   - Убери токен / поставь неверный → покажи, что **не проходит** (ожидаемая ошибка).
+   - По желанию: **Basic** `https://httpbin.org/basic-auth/user/passwd`, user / passwd.
+5. **Tests:** у GET `posts/1` — `StatusEquals` `200`, `BodyContains` фрагмент из ответа, `TimeLessThanMs` `3000` → **Test Results**.
+6. **Code:** сгенерировать cURL или C# для того же запроса.
+7. Одна фраза: «Тот же клиент работает с любым REST API; сегодня публичные учебные сервисы, плюс у меня в репозитории есть простой локальный CRUD для примера бэкенда».
+
+### A3. Что говорить (коротко)
+
+| Момент | Фраза |
+|--------|--------|
+| Старт | «ReqForge — десктопный REST-клиент: коллекции, среды, история, тесты ответа, генерация кода». |
+| Про auth | «Здесь не наш токен, а стандартный демо-сервис: так наглядно видно, что без заголовка авторизации запрос отклоняется». |
+| Про JSONPlaceholder | «Типичный CRUD-контракт: GET/POST, тело JSON — как в реальных интеграциях». |
+| Финал | «Локально у меня развёрнут минимальный API месторождений только чтобы показать свой backend без JWT; на защите могу не открывать, если не хватает времени». |
 
 ---
 
-### A1. Переменные среды в ReqForge (куда вводить)
+## Часть B — опционально (~1 мин): локальный API «КазМунайГаз» только CRUD
 
-**Где:** вкладка **Environments** → выбери среду (например `KMG Local`) → таблица переменных.
+**Когда:** если спросят «а свой сервер есть?» или хочешь визуально показать изменение данных.
 
-| Переменная | Откуда взять значение | Пример |
-|------------|------------------------|--------|
-| `base_url` | URL из Run-лога или `launchSettings.json` | `http://localhost:5062` |
-| `token` | После **Login** к API: ответ JSON, поле **`token`** (скопировать целиком) | *(пусто до логина)* |
-| `field_id` | Seed-данные: месторождения с id 1, 2, 3 | `1` |
-| `report_id` | После `GET .../ProductionReports` или из seed (часто первый отчёт id **1**) | `1` |
-| `incident_id` | После `GET .../Incidents` или seed (часто **1**) | `1` |
+**Что это:** `ReqForge.KmgDemo.API` — **без авторизации**, только **CRUD** по сущности «месторождение», данные в памяти.
 
-**В URL и заголовках используй:** `{{base_url}}`, `{{field_id}}` и т.д.
+### Запуск
 
-**Авторизация запросов к API (удобный способ):** вкладка **Auth** у запроса → тип **Bearer Token** → в поле токена вставь **`{{token}}`** (после того как заполнишь переменную `token` ответом логина).
+Rider → проект `ReqForge.KmgDemo.API` → **Run** → порт из лога (часто `http://localhost:5062`).
 
----
+### Наглядный «мини-фронт» (без React и без npm)
 
-### A2. Демо-пользователи API (логин/пароль)
+В браузере открой **`http://localhost:5062/`** — одна статическая страница: таблица + форма.  
+Там же видно **добавление / правка / удаление**; под капотом вызовы `GET/POST/PUT/DELETE /api/Fields`.
 
-| Логин | Пароль | Роль | Зачем на показе |
-|--------|--------|------|------------------|
-| `operator1` | `operator123` | operator | Обычный доступ: справочники, отчёты, инциденты |
-| `manager1` | `manager123` | manager | То же + **смена статуса инцидента** (`PATCH .../status`) |
+### Swagger
 
----
+`http://localhost:5062/swagger` — контракт API.
 
-### A3. Порядок запросов в ReqForge (что нажимать)
+### ReqForge к этому API (без токена)
 
-Выполняй сверху вниз; после шага 1 обнови переменную **`token`**.
+| Действие | Запрос |
+|----------|--------|
+| Список | `GET http://localhost:5062/api/Fields` |
+| Одна запись | `GET http://localhost:5062/api/Fields/1` |
+| Создать | `POST .../api/Fields` + JSON `name`, `region`, `isActive` |
+| Обновить | `PUT .../api/Fields/{id}` |
+| Удалить | `DELETE .../api/Fields/{id}` |
+| 404 | `GET .../api/Fields/999` |
 
-1. **POST** `{{base_url}}/api/Auth/login`  
-   - **Body** → тип `json`:
-
-```json
-{
-  "username": "operator1",
-  "password": "operator123"
-}
-```
-
-   - **Send** → `200`, скопируй **`token`** в переменную среды `token`.
-
-2. **GET** `{{base_url}}/api/Fields`  
-   - **Auth:** Bearer `{{token}}` (или как настроишь).  
-   - **Send** → список месторождений (Тенгиз, Кашаган, …).
-
-3. **GET** `{{base_url}}/api/dashboard/summary`  
-   - **Send** → агрегаты: активные поля, нефть/газ за 7 дней, открытые инциденты.
-
-4. **POST** `{{base_url}}/api/ProductionReports`  
-   - Покажи, что данные **меняются** без фронта — следующий GET покажет новую запись.
-
-```json
-{
-  "fieldId": 1,
-  "date": "2026-04-10T00:00:00Z",
-  "oilTons": 1000,
-  "gasThousandM3": 50,
-  "comment": "Смена — демо ReqForge"
-}
-```
-
-5. **GET** `{{base_url}}/api/ProductionReports`  
-   - **Send** → в списке виден только что созданный отчёт.
-
-6. **POST** `{{base_url}}/api/Incidents`
-
-```json
-{
-  "fieldId": 2,
-  "title": "Повышение вибрации на узле",
-  "severity": "medium"
-}
-```
-
-7. **Тесты ответа** (вкладка **Tests** у любого GET, например `Fields`):  
-   - `StatusEquals` → `200`  
-   - `BodyContains` → `"Тенгиз"` (или фрагмент из твоего JSON)  
-   - `TimeLessThanMs` → `3000`  
-   - **Send** → во вкладке ответа **Test Results** — зелёные галочки.
-
-8. **Роли (коротко):** залогинься как **`manager1`** (новый `token`), вызови **PATCH**  
-   `{{base_url}}/api/Incidents/{{incident_id}}/status`  
-   - Body:
-
-```json
-{
-  "status": "resolved"
-}
-```
-
-   - Потом снова **GET** `.../Incidents` — статус обновился.  
-   - (Опционально) с токеном **operator** тот же PATCH даёт **403** — «не все могут закрывать».
-
-9. **Ошибки на выбор (по 20 секунд):**  
-   - **401:** запрос без Bearer на `GET /api/Fields`.  
-   - **404:** `GET {{base_url}}/api/Fields/999`.  
-   - **400:** `POST /api/Incidents` с `"title": "ab"` (слишком коротко).
+Файл `ReqForge.KmgDemo.API/ReqForge.KmgDemo.http` в Rider — готовые шаблоны запросов.
 
 ---
 
-### A4. Что говорить жюри (простые фразы)
+## Часть C — развёрнутый запасной сценарий (интернет)
 
-| Момент | Пример формулировки |
-|--------|---------------------|
-| Вступление | «Это ReqForge — десктопный клиент для работы с REST API: запросы, коллекции, среды, тесты ответа, история, генерация кода». |
-| Про API | «Рядом для наглядности поднят учебный backend на ASP.NET Core 8 — сценарий КазМунайГаз: месторождения, отчёты добычи, инциденты, дашборд. Данные в памяти, без базы — чтобы демо было быстрым и предсказуемым». |
-| Один компьютер | «Оба приложения на этом же ПК; ReqForge ходит на `localhost` — интернет не обязателен». |
-| Без фронта | «Отдельный сайт не делал: изменения видны в JSON ответа и в истории запросов — этого достаточно, чтобы показать рабочий процесс инженера». |
-| Токен и роли | «После логина получаем JWT; в токене зашита роль — оператор и менеджер по-разному могут менять статус инцидента». |
-| Тесты | «После каждого запроса можно автоматически проверять код статуса, фрагмент тела и время ответа — это удобно для регрессии и демонстрации качества». |
-| Закрытие | «Инструмент универсальный: тот же ReqForge подключится к любому REST API, сегодня просто показан свой локальный пример». |
-
----
-
-### A5. Swagger — зачем на экране
-
-- Открой вкладку браузера **`/swagger`** рядом с ReqForge.  
-- **Одной фразой:** «Вот открытый контракт API; основная работа идёт в нашем клиенте».  
-- Не углубляйся в Swagger дольше 30 секунд.
-
----
-
-### A6. Если что-то пошло не так
-
-| Симптом | Что сделать |
-|---------|-------------|
-| Connection refused | API не запущен → Run в Rider |
-| 401 на всех запросах | Не подставлен токен / просрочен → снова `POST .../login`, обнови `{{token}}` |
-| Неверный порт | Сверь `base_url` с Run-логом |
-| 403 на PATCH | Ожидаемо для operator → залогинься как manager |
-
----
-
-## Часть B — опционально: публичные API (если попросят «показать ещё»)
-
-Ниже — **старый развёрнутый план** на внешние сервисы (нужен **интернет**). На **7 минут** обычно **не влезает**; оставлен как запасной сценарий или для вопросов после доклада.
+Если попросят показать больше: WebSocket, AI, Import/Export, `dotnet test` — см. свёрнутый блок ниже.
 
 <details>
-<summary>Развернуть: регистрация ReqForge, JSONPlaceholder, httpbin, WebSocket, AI (Groq)…</summary>
+<summary>Развернуть: WebSocket, Groq AI, Import/Export, юнит-тесты…</summary>
 
-### Подготовка (интернет + AI)
+### Подготовка
 
-1. Запусти ReqForge.
-2. **Groq API key** — вкладка AI, ключ `gsk_...` с console.groq.com (если показываешь AI).
-3. Тема: тёмная — лучше на проекторе.
+1. ReqForge запущен.
+2. **Groq API key** на вкладке AI (`gsk_...`), если показываешь AI.
+3. Тема: тёмная — удобнее на проекторе.
 
-### Часть 1: Регистрация и вход (~1 мин)
+### Регистрация / вход в ReqForge
 
-**Что показываем:** авторизация в самом ReqForge, SQLite, хэш пароля.
+- `demo` / `demo123` → Register → Login.
 
-1. Username: `demo`, Password: `demo123`
-2. **Register** → **Login**
-3. **Фраза:** «У каждого пользователя свои коллекции, история и среды; пароль в БД в виде SHA-256 с солью».
+### JSONPlaceholder (детально)
 
-### Часть 2: Базовый GET (~2 мин)
-
-- Метод `GET`, URL: `https://jsonplaceholder.typicode.com/posts/1`
-- **Send** → статус, время, форматированный JSON, запись в **History**
-
-### Часть 3: POST с JSON (~2 мин)
-
-- `POST` `https://jsonplaceholder.typicode.com/posts`
-- Body (json):
+- GET `https://jsonplaceholder.typicode.com/posts/1`
+- POST `https://jsonplaceholder.typicode.com/posts` с телом:
 
 ```json
 {
@@ -200,71 +119,53 @@
 }
 ```
 
-### Часть 4: Params и Headers (~1 мин)
+### httpbin — авторизация
 
-- GET `https://jsonplaceholder.typicode.com/posts` + param `userId` = `1`
-- Заголовок `X-Custom-Header: ReqForge-Demo`
+- Bearer + `https://httpbin.org/bearer`
+- Basic + `https://httpbin.org/basic-auth/user/passwd`
 
-### Часть 5: Auth в ReqForge (~2 мин)
+### WebSocket
 
-- Bearer: `GET https://httpbin.org/bearer` + токен `my-secret-token-123`
-- Basic: `https://httpbin.org/basic-auth/user/passwd` user/passwd
-- API Key в заголовке `X-API-Key`
+- `wss://echo.websocket.org` — Connect, сообщение, Disconnect.
 
-### Часть 6–8: Коллекции, Environments, поиск
+### AI (Groq)
 
-- Новая коллекция, **Save Current**, `{{base_url}}` / `{{user_id}}`
-- Поиск по сайдбару
+- Explain Response, Generate JSON, Import cURL.
 
-### Часть 9: Тесты ответа (~2 мин)
+### Юнит-тесты
 
-- `StatusEquals` 200, `BodyContains`, `TimeLessThanMs`
+```bash
+dotnet test --verbosity normal
+```
 
-### Часть 10: Генерация кода (~2 мин)
+### Шпаргалка URL
 
-- Вкладка **Code**: cURL, PowerShell, C# HttpClient
-
-### Часть 11: WebSocket (~2 мин)
-
-- `wss://echo.websocket.org`, Connect, Send, Disconnect
-
-### Часть 12: AI (~3 мин, нужен ключ)
-
-- Explain Response, Generate JSON, Import cURL
-
-### Часть 13–15: Import/Export, тема, `dotnet test`
-
-- По необходимости
-
-### Шпаргалка URL (внешние)
-
-| # | Метод | URL |
-|---|--------|-----|
-| 1 | GET | `https://jsonplaceholder.typicode.com/posts/1` |
-| 2 | GET | `https://jsonplaceholder.typicode.com/posts?userId=1` |
-| 3 | POST | `https://jsonplaceholder.typicode.com/posts` |
-| 4 | GET | `https://httpbin.org/bearer` |
-| 5 | GET | `https://httpbin.org/basic-auth/user/passwd` |
-| 6 | WSS | `wss://echo.websocket.org` |
+| Метод | URL |
+|--------|-----|
+| GET | `https://jsonplaceholder.typicode.com/posts/1` |
+| POST | `https://jsonplaceholder.typicode.com/posts` |
+| GET | `https://httpbin.org/bearer` |
+| GET | `https://httpbin.org/basic-auth/user/passwd` |
+| WSS | `wss://echo.websocket.org` |
 
 </details>
 
 ---
 
-## Технологии (одним абзацем на вопрос комиссии)
+## Технологии (для ответа комиссии)
 
-- **ReqForge:** .NET 8, WPF, MVVM, SQLite, HttpClient, WebSocket, опционально Groq (Llama).
-- **Демо API:** ASP.NET Core 8 Web API, JWT Bearer, Swagger, in-memory store.
+- **ReqForge:** .NET 8, WPF, MVVM, SQLite, HttpClient, WebSocket, опционально Groq.
+- **Демо API (опционально):** ASP.NET Core 8, in-memory CRUD, Swagger, статическая страница в `wwwroot`.
 
 ---
 
 ## Возможные вопросы
 
-**Зачем локальный API, если есть публичные?**  
-Чтобы сценарий был предсказуемым, без интернета и с бизнес-контекстом (месторождения, добыча, инциденты), плюс роли и контролируемые ошибки.
+**Почему у локального API нет логина?**  
+Чтобы на защите не тратить время на JWT: CRUD и так понятен; авторизацию показываю на httpbin в ReqForge.
 
-**Нужен ли фронт?**  
-Нет: для API-клиента главное — контракт и JSON; Swagger подтверждает сервер, ReqForge — основной фокус.
+**Зачем тогда страница в браузере?**  
+Чтобы нетехническому жюри было видно «данные реально меняются», без разбора JSON.
 
 **Чем не Postman?**  
-Десктоп под Windows, своя модель данных, генерация кода, WebSocket, локальное хранение, в проекте — AI и т.д. (формулируй по факту своей реализации).
+Кратко: десктоп, своя модель коллекций/БД, генерация кода, WebSocket, по проекту — свои фичи (AI и т.д.).

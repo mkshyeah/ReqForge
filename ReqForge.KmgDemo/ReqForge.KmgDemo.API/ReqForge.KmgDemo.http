@@ -1,6 +1,34 @@
 @ReqForge.KmgDemo_HostAddress = http://localhost:5062
 
-GET {{ReqForge.KmgDemo_HostAddress}}/weatherforecast/
+### Список месторождений
+GET {{ReqForge.KmgDemo_HostAddress}}/api/Fields
 Accept: application/json
+
+### Одно месторождение
+GET {{ReqForge.KmgDemo_HostAddress}}/api/Fields/1
+Accept: application/json
+
+### Создать
+POST {{ReqForge.KmgDemo_HostAddress}}/api/Fields
+Content-Type: application/json
+
+{
+  "name": "Узен",
+  "region": "Мангистауская область",
+  "isActive": true
+}
+
+### Обновить (подставь существующий id)
+PUT {{ReqForge.KmgDemo_HostAddress}}/api/Fields/1
+Content-Type: application/json
+
+{
+  "name": "Тенгиз (обновлено)",
+  "region": "Атырауская область",
+  "isActive": true
+}
+
+### Удалить
+DELETE {{ReqForge.KmgDemo_HostAddress}}/api/Fields/99
 
 ###

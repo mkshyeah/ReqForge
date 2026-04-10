@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>KMG Demo — месторождения (CRUD)</title>
+  <style>
+    :root { font-family: system-ui, sans-serif; background: #0f1419; color: #e7ecf3; }
+    body { max-width: 920px; margin: 24px auto; padding: 0 16px; }
+    h1 { font-size: 1.25rem; font-weight: 600; }
+    p.note { color: #9aa7b2; font-size: 0.9rem; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+    th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #2a3440; }
+    th { color: #c5d0db; font-weight: 600; }
+    button { cursor: pointer; border: none; border-radius: 6px; padding: 6px 12px; font-size: 0.875rem; }
+    .btn-edit { background: #2d6cdf; color: #fff; margin-right: 6px; }
+    .btn-del { background: #c23b3b; color: #fff; }
+    .btn-save { background: #2a9d6a; color: #fff; }
+    .btn-cancel { background: #3d4a5c; color: #fff; margin-left: 6px; }
+    form.panel { background: #1a222c; padding: 14px 16px; border-radius: 10px; margin-bottom: 20px; }
+    label { display: block; font-size: 0.8rem; color: #9aa7b2; margin-top: 8px; }
+    input[type="text"] { width: 100%; max-width: 420px; padding: 8px 10px; border-radius: 6px; border: 1px solid #2a3440; background: #0f1419; color: #e7ecf3; }
+    .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+    .err { color: #f4a4a4; font-size: 0.85rem; margin-top: 8px; }
+    code { background: #1a222c; padding: 2px 6px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <h1>Демо: месторождения (локальный API)</h1>
+  <p class="note">Страница вызывает <code>/api/Fields</code> на этом же сервере — удобно показать жюри создание / изменение / удаление без JWT.</p>
+
+  <form class="panel" id="form">
+    <strong id="formTitle">Новое месторождение</strong>
+    <input type="hidden" id="editId" value=""/>
+    <label for="name">Название</label>
+    <input type="text" id="name" required maxlength="120"/>
+    <label for="region">Регион</label>
+    <input type="text" id="region" required maxlength="120"/>
+    <label class="row"><input type="checkbox" id="active" checked/> Активно</label>
+    <div class="row">
+      <button type="submit" class="btn-save" id="submitBtn">Добавить</button>
+      <button type="button" class="btn-cancel" id="cancelBtn" hidden>Отмена</button>
+    </div>
+    <div class="err" id="err" hidden></div>
+  </form>
+
+  <table>
+    <thead>
+      <tr><th>Id</th><th>Название</th><th>Регион</th><th>Активно</th><th></th></tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
+
+  <script>
+    const api = (path, opts = {}) => fetch(path, {
+      headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) },
+      ...opts,
+    });
+
+    const rows = document.getElementById('rows');
+    const form = document.getElementById('form');
+    const formTitle = document.getElementById('formTitle');
+    const editId = document.getElementById('editId');
+    const nameEl = document.getElementById('name');
+    const regionEl = document.getElementById('region');
+    const activeEl = document.getElementById('active');
+    const submitBtn = document.getElementById('submitBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const err = document.getElementById('err');
+
+    function showError(msg) {
+      err.textContent = msg || '';
+      err.hidden = !msg;
+    }
+
+    async function load() {
+      showError('');
+      const res = await api('/api/Fields');
+      if (!res.ok) { showError('Не удалось загрузить список'); return; }
+      const data = await res.json();
+      rows.innerHTML = '';
+      for (const f of data) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${f.id}</td>
+          <td>${escapeHtml(f.name)}</td>
+          <td>${escapeHtml(f.region)}</td>
+          <td>${f.isActive ? 'да' : 'нет'}</td>
+          <td>
+            <button type="button" class="btn-edit" data-id="${f.id}">Изменить</button>
+            <button type="button" class="btn-del" data-id="${f.id}">Удалить</button>
+          </td>`;
+        rows.appendChild(tr);
+      }
+      rows.querySelectorAll('.btn-edit').forEach(b => b.onclick = () => startEdit(Number(b.dataset.id)));
+      rows.querySelectorAll('.btn-del').forEach(b => b.onclick = () => remove(Number(b.dataset.id)));
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    function resetForm() {
+      editId.value = '';
+      formTitle.textContent = 'Новое месторождение';
+      submitBtn.textContent = 'Добавить';
+      cancelBtn.hidden = true;
+      nameEl.value = '';
+      regionEl.value = '';
+      activeEl.checked = true;
+    }
+
+    async function startEdit(id) {
+      showError('');
+      const res = await api('/api/Fields/' + id);
+      if (!res.ok) { showError('Запись не найдена'); return; }
+      const f = await res.json();
+      editId.value = String(f.id);
+      nameEl.value = f.name;
+      regionEl.value = f.region;
+      activeEl.checked = !!f.isActive;
+      formTitle.textContent = 'Редактирование #' + f.id;
+      submitBtn.textContent = 'Сохранить';
+      cancelBtn.hidden = false;
+    }
+
+    cancelBtn.onclick = () => { resetForm(); showError(''); };
+
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      showError('');
+      const body = JSON.stringify({
+        name: nameEl.value.trim(),
+        region: regionEl.value.trim(),
+        isActive: activeEl.checked,
+      });
+      const id = editId.value;
+      const res = id
+        ? await api('/api/Fields/' + id, { method: 'PUT', body })
+        : await api('/api/Fields', { method: 'POST', body });
+      if (!res.ok) {
+        const t = await res.text();
+        showError('Ошибка ' + res.status + (t ? ': ' + t : ''));
+        return;
+      }
+      resetForm();
+      await load();
+    };
+
+    async function remove(id) {
+      if (!confirm('Удалить месторождение #' + id + '?')) return;
+      showError('');
+      const res = await api('/api/Fields/' + id, { method: 'DELETE' });
+      if (res.status !== 204 && !res.ok) {
+        showError('Не удалось удалить');
+        return;
+      }
+      resetForm();
+      await load();
+    }
+
+    load();
+  </script>
+</body>
+</html>

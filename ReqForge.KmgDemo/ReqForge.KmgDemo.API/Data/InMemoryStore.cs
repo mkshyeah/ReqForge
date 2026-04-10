@@ -13,67 +13,43 @@ public class InMemoryStore
         new Field { Id = 3, Name = "Карачаганак", Region = "Западно-Казахстанская область", IsActive = true }
     ];
 
-    public List<ProductionReport> ProductionReports { get; } =
-    [
-        new ProductionReport
-        {
-            Id = 1,
-            FieldId = 1,
-            Date = DateTime.UtcNow.Date.AddDays(-1),
-            OilTons = 12500,
-            GasThousandM3 = 840,
-            Comment = "План выполнен"
-        }
-    ];
-
-    public List<Incident> Incidents { get; } =
-    [
-        new Incident
-        {
-            Id = 1,
-            FieldId = 2,
-            Title = "Скачок давления на линии",
-            Severity = "medium",
-            Status = "in_progress",
-            CreatedAt = DateTime.UtcNow.AddHours(-5)
-        }
-    ];
-
     public Field? GetField(int id) => Fields.FirstOrDefault(f => f.Id == id);
 
-    public ProductionReport? GetProductionReport(int id) => ProductionReports.FirstOrDefault(r => r.Id == id);
-
-    public Incident? GetIncident(int id) => Incidents.FirstOrDefault(i => i.Id == id);
-
-    public ProductionReport AddProductionReport(ProductionReport report)
+    public Field AddField(string name, string region, bool isActive)
     {
         lock (_sync)
         {
-            report.Id = ProductionReports.Count == 0 ? 1 : ProductionReports.Max(r => r.Id) + 1;
-            ProductionReports.Add(report);
-            return report;
+            var id = Fields.Count == 0 ? 1 : Fields.Max(f => f.Id) + 1;
+            var field = new Field { Id = id, Name = name, Region = region, IsActive = isActive };
+            Fields.Add(field);
+            return field;
         }
     }
 
-    public Incident AddIncident(Incident incident)
+    public bool TryUpdateField(int id, string name, string region, bool isActive, out Field? field)
     {
         lock (_sync)
         {
-            incident.Id = Incidents.Count == 0 ? 1 : Incidents.Max(i => i.Id) + 1;
-            Incidents.Add(incident);
-            return incident;
-        }
-    }
-
-    public bool TryUpdateIncidentStatus(int id, string status, out Incident? incident)
-    {
-        lock (_sync)
-        {
-            incident = Incidents.FirstOrDefault(i => i.Id == id);
-            if (incident == null)
+            field = Fields.FirstOrDefault(f => f.Id == id);
+            if (field == null)
                 return false;
 
-            incident.Status = status;
+            field.Name = name;
+            field.Region = region;
+            field.IsActive = isActive;
+            return true;
+        }
+    }
+
+    public bool TryDeleteField(int id)
+    {
+        lock (_sync)
+        {
+            var field = Fields.FirstOrDefault(f => f.Id == id);
+            if (field == null)
+                return false;
+
+            Fields.Remove(field);
             return true;
         }
     }
