@@ -4,6 +4,59 @@
 
 ---
 
+## Быстрый запуск через терминал (на чужом ПК / Visual Studio)
+
+Если UI в Visual Studio подведет, запускай строго через терминал.
+
+### 1) Клонирование и вход в папку
+
+```powershell
+git clone <ТВОЙ_GITHUB_URL>
+cd ReqForge
+```
+
+### 2) Проверка .NET
+
+```powershell
+dotnet --version
+```
+
+Если команды `dotnet` нет — нужно установить .NET SDK 8 (или новее).
+
+### 3) Восстановление, сборка, запуск WPF
+
+```powershell
+dotnet restore
+dotnet build
+dotnet run --project "ReqForge/ReqForge.csproj"
+```
+
+### 4) Если EXE заблокирован (частая проблема)
+
+```powershell
+taskkill /IM ReqForge.exe /F
+dotnet build
+dotnet run --project "ReqForge/ReqForge.csproj"
+```
+
+### 5) Опционально: запустить локальный демо API (если понадобится)
+
+```powershell
+dotnet run --project "ReqForge.KmgDemo/ReqForge.KmgDemo.API/ReqForge.KmgDemo.API.csproj"
+```
+
+После запуска:
+- Swagger: `http://localhost:<port>/swagger`
+- Мини-страница: `http://localhost:<port>/`
+
+### 6) Быстрый smoke-test (1 минута)
+
+1. В ReqForge отправь GET `https://jsonplaceholder.typicode.com/posts/1` — должен быть `200`.
+2. Проверь вкладку History (добавилась запись).
+3. Проверь WebSocket `wss://echo.websocket.org` (Connect/Send/Disconnect).
+
+---
+
 ## Часть A — основной показ (~7 минут): ReqForge + публичные API
 
 **Фокус:** клиент ReqForge (запросы, коллекции, среды, тесты, история, код).  
